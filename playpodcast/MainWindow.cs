@@ -1,8 +1,11 @@
 using System.Data;
+using System.Xml;
 using Terminal.Gui;
 
 public class MainWindow : Toplevel
 {
+    public List<Tuple<string, string>> Podcasts { get; set; }
+
     public MainWindow()
     {
         ColorScheme = Colors.Base;
@@ -54,9 +57,9 @@ public class MainWindow : Toplevel
 
         TableView podcastTableView = new()
         {
-            X = 0,
+            X = 1,
             Y = 0,
-            Width = Dim.Fill(0),
+            Width = Dim.Fill(1),
             Height = Dim.Percent(100),
             FullRowSelect = true,
             Style = new TableView.TableStyle()
@@ -72,10 +75,38 @@ public class MainWindow : Toplevel
         DataTable podcastTable = new();
         podcastTable.Columns.AddRange(new DataColumn[] {
             new DataColumn("Name"),
-            new DataColumn("Last Updated"),
         });
 
-        podcastTable.Rows.Add(["A sample podcast 1", DateTime.Now.ToShortTimeString()]);
+        string OpmlFile = @"\projects\playpodcast\playpodcast\subscriptions.opml";
+
+        XmlReaderSettings xmlsettings = new()
+        {
+            Async = false,
+            IgnoreComments = true,
+            IgnoreWhitespace = true,
+            ValidationType = ValidationType.None,
+        };
+
+        Podcasts = new();
+        using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
+        {
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
+                {
+                    string PodcastTitle = reader.GetAttribute("text") ?? "";
+                    string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
+
+                    if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
+                    {
+                        Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
+                        Podcasts.Add(podcast);
+
+                        podcastTable.Rows.Add([podcast.Item1]);
+                    }
+                }
+            }
+        }
 
         podcastTableView.Table = podcastTable;
 
@@ -94,9 +125,9 @@ public class MainWindow : Toplevel
 
         TableView episodeTableView = new()
         {
-            X = 0,
+            X = 1,
             Y = 0,
-            Width = Dim.Fill(0),
+            Width = Dim.Fill(1),
             Height = Dim.Percent(100),
             FullRowSelect = true,
             Style = new TableView.TableStyle()
