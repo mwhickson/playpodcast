@@ -1,8 +1,10 @@
+using System.Data;
 using Terminal.Gui;
 
-public class MainWindow: Toplevel
+public class MainWindow : Toplevel
 {
-    public MainWindow() {
+    public MainWindow()
+    {
         ColorScheme = Colors.Base;
 
         MenuBar = new MenuBar(
@@ -41,23 +43,84 @@ public class MainWindow: Toplevel
         int menuHeight = 1;
         int statusHeight = 1;
 
-        FrameView podcastPane = new("Podcasts") {
+        FrameView podcastPane = new("Podcasts")
+        {
             X = 0,
             Y = menuHeight,
             Width = Dim.Fill(0),
             Height = Dim.Percent(40) - menuHeight,
-            CanFocus = true
+            CanFocus = true,
         };
+
+        TableView podcastTableView = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(0),
+            Height = Dim.Percent(100),
+            FullRowSelect = true,
+            Style = new TableView.TableStyle()
+            {
+                AlwaysShowHeaders = true,
+                ShowHorizontalHeaderOverline = false,
+                ShowHorizontalHeaderUnderline = false,
+                ShowVerticalCellLines = false,
+                ShowVerticalHeaderLines = false,
+            },
+        };
+
+        DataTable podcastTable = new();
+        podcastTable.Columns.AddRange(new DataColumn[] {
+            new DataColumn("Name"),
+            new DataColumn("Last Updated"),
+        });
+
+        podcastTable.Rows.Add(["A sample podcast 1", DateTime.Now.ToShortTimeString()]);
+
+        podcastTableView.Table = podcastTable;
+
+        podcastPane.Add(podcastTableView);
 
         Add(podcastPane);
 
-        FrameView episodePane = new("Episodes") {
+        FrameView episodePane = new("Episodes")
+        {
             X = 0,
             Y = Pos.Percent(40),
             Width = Dim.Fill(0),
             Height = Dim.Fill(0) - statusHeight,
-            CanFocus = true
+            CanFocus = true,
         };
+
+        TableView episodeTableView = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(0),
+            Height = Dim.Percent(100),
+            FullRowSelect = true,
+            Style = new TableView.TableStyle()
+            {
+                AlwaysShowHeaders = true,
+                ShowHorizontalHeaderOverline = false,
+                ShowHorizontalHeaderUnderline = false,
+                ShowVerticalCellLines = false,
+                ShowVerticalHeaderLines = false,
+            },
+        };
+
+        DataTable episodeTable = new();
+        episodeTable.Columns.AddRange(new DataColumn[] {
+            new DataColumn("Name"),
+            new DataColumn("Duration"),
+            new DataColumn("Published"),
+        });
+
+        episodeTable.Rows.Add(["A sample episode", "1 minute", DateTime.Now.ToShortTimeString()]);
+
+        episodeTableView.Table = episodeTable;
+
+        episodePane.Add(episodeTableView);
 
         Add(episodePane);
 
