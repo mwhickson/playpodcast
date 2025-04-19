@@ -72,6 +72,11 @@ class PodcastEpisodePlayer
 		// Console.WriteLine("ACTION 2: {0}", secondActionText);
 		// Console.WriteLine();
 
+		//
+		// TODO: fix raw text checks
+		// (could just cheat and call PostAction(1) blindly, but would prefer clarity of code and future proofing...)
+		//
+
 		if (title != null && title == "Insecure site" && token.CanBeCanceled)
 		{
 			if (firstActionText != null)
