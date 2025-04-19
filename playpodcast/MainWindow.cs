@@ -38,6 +38,29 @@ public class MainWindow: Toplevel
 
         Add(MenuBar);
 
+        int menuHeight = 1;
+        int statusHeight = 1;
+
+        FrameView podcastPane = new("Podcasts") {
+            X = 0,
+            Y = menuHeight,
+            Width = Dim.Fill(0),
+            Height = Dim.Percent(40) - menuHeight,
+            CanFocus = true
+        };
+
+        Add(podcastPane);
+
+        FrameView episodePane = new("Episodes") {
+            X = 0,
+            Y = Pos.Percent(40),
+            Width = Dim.Fill(0),
+            Height = Dim.Fill(0) - statusHeight,
+            CanFocus = true
+        };
+
+        Add(episodePane);
+
         StatusBar = new StatusBar()
         {
             Visible = true,
