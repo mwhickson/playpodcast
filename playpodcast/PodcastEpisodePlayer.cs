@@ -1,6 +1,6 @@
 using LibVLCSharp.Shared;
 
-class PodcastEpisodePlayer
+public class PodcastEpisodePlayer
 {
 	public string EpisodeUrl { get; set; } = "";
 
@@ -14,7 +14,14 @@ class PodcastEpisodePlayer
 
 	public PodcastEpisodePlayer(string episodeUrl)
 	{
-		this.vlc.SetDialogHandlers(VlcDisplayError, VlcDisplayLogin, VlcDisplayQuestion, VlcDisplayProgress, VlcUpdateProgress);
+		this.vlc.SetDialogHandlers(
+			PodcastEpisodePlayer.VlcDisplayError,
+			PodcastEpisodePlayer.VlcDisplayLogin,
+			PodcastEpisodePlayer.VlcDisplayQuestion,
+			PodcastEpisodePlayer.VlcDisplayProgress,
+			PodcastEpisodePlayer.VlcUpdateProgress
+		);
+
 		this.EpisodeUrl = episodeUrl;
 	}
 
@@ -44,6 +51,9 @@ class PodcastEpisodePlayer
 		}
 
 		Console.WriteLine("Playback stopped.");
+
+		Console.BackgroundColor = ConsoleColor.Black;
+		Console.ForegroundColor = ConsoleColor.White;
 
 		this.audio?.Dispose();
 
