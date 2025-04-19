@@ -4,49 +4,58 @@ using Terminal.Gui;
 
 public class MainWindow : Toplevel
 {
-    public List<Tuple<string, string>> Podcasts { get; set; }
+    private static readonly int menuHeight = 1;
+    private static readonly int statusHeight = 1;
+
+    private static readonly string fileMenuText = "_File";
+    private static readonly string fileNewMenuText = "_New from URL...";
+    private static readonly string fileOpenMenuText = "_Open OPML...";
+    private static readonly string fileQuitMenuText = "_Quit";
+    private static readonly string helpMenuText = "_Help";
+    private static readonly string helpAboutMenuText = "_About";
+    private static readonly string podcastsTitle = "Podcasts";
+    private static readonly string episodesTitle = "Episodes";
+
+    public string OpmlFile { get; set; } = @"\projects\playpodcast\playpodcast\subscriptions.opml";
+    public List<Tuple<string, string>> Podcasts { get; set; } = [];
+    public DataTable PodcastTable { get; set; }
+    public DataTable EpisodesTable { get; set; }
 
     public MainWindow()
     {
         ColorScheme = Colors.Base;
 
-        MenuBar = new MenuBar(
-            new MenuBarItem[] {
+        Add(CreateMenu());
+        Add(CreatePodcastsPane());
+        Add(CreateEpisodesPane());
+        Add(CreateStatusBar());
+    }
+
+    private MenuBar CreateMenu()
+    {
+        MenuBar MainMenu = new(
+            [
                 new MenuBarItem(
-                    "_File", new MenuItem[]
-                    {
-                        new MenuItem("_Quit", "", () => RequestStop(), null, null, Key.Q | Key.CtrlMask)
-                    }),
+                    fileMenuText,
+                    [
+                        new MenuItem(fileNewMenuText, "", OnNewFromURL, null, null, Key.N | Key.CtrlMask),
+                        new MenuItem(fileOpenMenuText, "", OnOpenFromOPML, null, null, Key.O | Key.CtrlMask),
+                        new MenuItem(fileQuitMenuText, "", OnQuit, null, null, Key.Q | Key.CtrlMask),
+                    ]),
                 new MenuBarItem(
-                    "_Help", new MenuItem[]
-                    {
-                        new MenuItem(
-                            "_About",
-                            "",
-                            () => MessageBox.Query(
-                                "About playpodcast",
-                                "\nA podcast player."
-                                    + "\n\ngithub.com/mwhickson/playpodcast"
-                                    + "\n\n(c) 2025 Matthew Hickson"
-                                    + "\n\n- using -"
-                                    + "\nLibVLCSharp"
-                                    + "\nTerminal.Gui",
-                                "_Ok"
-                            ),
-                            null,
-                            null,
-                            Key.F1
-                        )
-                    }),
-            }
+                    helpMenuText,
+                    [
+                        new MenuItem(helpAboutMenuText, "", OnShowAbout, null, null, Key.F1),
+                    ]),
+            ]
         );
 
-        Add(MenuBar);
+        return MainMenu;
+    }
 
-        int menuHeight = 1;
-        int statusHeight = 1;
-
-        FrameView podcastPane = new("Podcasts")
+    private FrameView CreatePodcastsPane()
+    {
+        FrameView podcastPane = new(podcastsTitle)
         {
             X = 0,
             Y = menuHeight,
@@ -72,49 +81,17 @@ public class MainWindow : Toplevel
             },
         };
 
-        DataTable podcastTable = new();
-        podcastTable.Columns.AddRange(new DataColumn[] {
-            new DataColumn("Name"),
-        });
-
-        string OpmlFile = @"\projects\playpodcast\playpodcast\subscriptions.opml";
-
-        XmlReaderSettings xmlsettings = new()
-        {
-            Async = false,
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            ValidationType = ValidationType.None,
-        };
-
-        Podcasts = new();
-        using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
-        {
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
-                {
-                    string PodcastTitle = reader.GetAttribute("text") ?? "";
-                    string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
-
-                    if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
-                    {
-                        Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
-                        Podcasts.Add(podcast);
-
-                        podcastTable.Rows.Add([podcast.Item1]);
-                    }
-                }
-            }
-        }
-
-        podcastTableView.Table = podcastTable;
+        podcastTableView.KeyUp += OnPodcastSelect;
+        podcastTableView.Table = OnPodcastsPopulate();
 
         podcastPane.Add(podcastTableView);
 
-        Add(podcastPane);
+        return podcastPane;
+    }
 
-        FrameView episodePane = new("Episodes")
+    private FrameView CreateEpisodesPane()
+    {
+        FrameView episodePane = new(episodesTitle)
         {
             X = 0,
             Y = Pos.Percent(40),
@@ -140,30 +117,115 @@ public class MainWindow : Toplevel
             },
         };
 
-        DataTable episodeTable = new();
-        episodeTable.Columns.AddRange(new DataColumn[] {
+        EpisodesTable = new();
+        EpisodesTable.Columns.AddRange([
             new DataColumn("Name"),
             new DataColumn("Duration"),
             new DataColumn("Published"),
-        });
+        ]);
 
-        episodeTable.Rows.Add(["A sample episode", "1 minute", DateTime.Now.ToShortTimeString()]);
+        EpisodesTable.Rows.Add(["A sample episode", "1 minute", DateTime.Now.ToShortTimeString()]);
 
-        episodeTableView.Table = episodeTable;
+        episodeTableView.Table = EpisodesTable;
 
         episodePane.Add(episodeTableView);
 
-        Add(episodePane);
+        return episodePane;
+    }
 
-        StatusBar = new StatusBar()
+    private StatusBar CreateStatusBar()
+    {
+        StatusBar MainStatus = new()
         {
             Visible = true,
         };
 
-        StatusBar.Items = new StatusItem[] {
+        MainStatus.Items = [
             new StatusItem(Key.Null, "CTRL+Q to Quit", () => {}),
+        ];
+
+        return MainStatus;
+    }
+
+    private void OnQuit()
+    {
+         RequestStop();
+    }
+
+    private void OnNewFromURL()
+    {
+        // TODO:
+    }
+
+    private void OnOpenFromOPML()
+    {
+        // TODO:
+    }
+
+    private void OnShowAbout()
+    {
+        MessageBox.Query(
+            "About playpodcast",
+            "\nA podcast player."
+                + "\n\ngithub.com/mwhickson/playpodcast"
+                + "\n\n(c) 2025 Matthew Hickson"
+                + "\n\n- using -"
+                + "\nLibVLCSharp"
+                + "\nTerminal.Gui",
+            "_Ok"
+        );
+    }
+
+    private DataTable OnPodcastsPopulate()
+    {
+        PodcastTable = new();
+        PodcastTable.Columns.AddRange([
+            new DataColumn("Name"),
+        ]);
+
+        XmlReaderSettings xmlsettings = new()
+        {
+            Async = false,
+            IgnoreComments = true,
+            IgnoreWhitespace = true,
+            ValidationType = ValidationType.None,
         };
 
-        Add(StatusBar);
+        Podcasts.Clear();
+        using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
+        {
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
+                {
+                    string PodcastTitle = reader.GetAttribute("text") ?? "";
+                    string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
+
+                    if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
+                    {
+                        Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
+                        Podcasts.Add(podcast);
+                        PodcastTable.Rows.Add([podcast.Item1]);
+                    }
+                }
+            }
+        }
+
+        return PodcastTable;
+    }
+
+    private void OnPodcastSelect(View.KeyEventEventArgs e)
+    {
+        KeyEvent keyEvent = e.KeyEvent;
+        if (keyEvent.Key == Key.Enter)
+        {
+            MessageBox.Query(
+                "Selected podcast",
+                "{ a podcast }",
+                "_Ok"
+            );
+
+            e.Handled = true;
+        }
     }
 }
