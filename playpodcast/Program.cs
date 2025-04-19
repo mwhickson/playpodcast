@@ -1,47 +1,21 @@
-﻿internal class Program
+﻿using Terminal.Gui;
+
+internal class Program
 {
     private static void Main(string[] args)
     {
-        UserInterface.DrawScreen();
+        Application.Init();
 
-        string url = "https://s.gum.fm/s-64df757f86d495f3f8ac7af4/traffic.megaphone.fm/BDA8396986280.mp3?updated=1743515791";
+        Application.Run<MainWindow>();
 
-        PodcastEpisodePlayer player = new(url);
-        player.Play();
+        // string url = "https://s.gum.fm/s-64df757f86d495f3f8ac7af4/traffic.megaphone.fm/BDA8396986280.mp3?updated=1743515791";
 
-        UserInterface.Prompt("Press <ENTER> to stop playback.");
+        // PodcastEpisodePlayer player = new(url);
+        // player.Play();
 
-        player.Stop();
-    }
+        Application.Shutdown();
 
-    class UserInterface
-    {
-        public static void DrawScreen()
-        {
-            Console.BackgroundColor = ConsoleColor.DarkBlue;
-            Console.ForegroundColor = ConsoleColor.White;
-
-            Console.Clear();
-
-            Console.WriteLine("playaudio");
-
-            // Console.BackgroundColor
-            // Console.BufferHeight
-            // Console.BufferWidth
-            // Console.Clear
-            // Console.CursorVisible
-            // Console.ForegroundColor
-            // Console.SetCursorPosition
-            // Console.Title
-            // Console.WindowHeight
-            // Console.WindowWidth
-        }
-
-        public static void Prompt(string message)
-        {
-            Console.Write(message);
-            Console.ReadLine();
-        }
+        // player.Stop();
     }
 
 }
