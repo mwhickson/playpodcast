@@ -15,7 +15,23 @@ public class MainWindow: Toplevel
                 new MenuBarItem(
                     "_Help", new MenuItem[]
                     {
-                        new MenuItem("_About", "", () => MessageBox.Query("About playpodcast", "TODO...", "_Ok"), null, null, Key.F1)
+                        new MenuItem(
+                            "_About",
+                            "",
+                            () => MessageBox.Query(
+                                "About playpodcast",
+                                "\nA podcast player."
+                                    + "\n\ngithub.com/mwhickson/playpodcast"
+                                    + "\n\n(c) 2025 Matthew Hickson"
+                                    + "\n\n- using -"
+                                    + "\nLibVLCSharp"
+                                    + "\nTerminal.Gui",
+                                "_Ok"
+                            ),
+                            null,
+                            null,
+                            Key.F1
+                        )
                     }),
             }
         );
