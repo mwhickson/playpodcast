@@ -16,7 +16,7 @@ public class MainWindow : Toplevel
     private static readonly string podcastsTitle = "Podcasts";
     private static readonly string episodesTitle = "Episodes";
 
-    private string OpmlFile { get; set; } = @"\projects\playpodcast\playpodcast\subscriptions.opml";
+    private string OpmlFile { get; set; } = "";
     private List<Tuple<string, string>> Podcasts { get; set; } = [];
     private List<Tuple<string, string>> Episodes { get; set; } = [];
     private Tuple<string, string> SelectedPodcast { get; set; }
@@ -26,6 +26,7 @@ public class MainWindow : Toplevel
     public DataTable PodcastTable { get; set; }
     public DataTable EpisodesTable { get; set; }
     public StatusBar MainStatus {get; set; }
+    PodcastEpisodePlayer Player {get; set; }
 
     public MainWindow()
     {
@@ -164,7 +165,25 @@ public class MainWindow : Toplevel
 
     private void OnOpenFromOPML()
     {
-        // TODO:
+        OpenDialog dialog = new() {
+            AllowedFileTypes = ["opml", "xml"],
+            AllowsMultipleSelection = false,
+            AutoSize = true,
+            Message = "Select an OPML file...",
+            Title = "Open OPML file",
+            Visible = true,
+        };
+
+        Application.Run(dialog);
+
+        if (!dialog.Canceled && !string.IsNullOrWhiteSpace(dialog.FilePath.ToString())) {
+            string FileName = dialog.FilePath.ToString();
+            if (File.Exists(FileName)) {
+                OpmlFile = FileName;
+                OnPodcastsPopulate();
+                this.PodcastView.SetNeedsDisplay();
+            }
+        }
     }
 
     private void OnShowAbout()
@@ -183,45 +202,52 @@ public class MainWindow : Toplevel
 
     private DataTable OnPodcastsPopulate()
     {
-        UpdateStatus("Populating Podcast list from OPML...");
-
-        PodcastTable = new();
-        PodcastTable.Columns.AddRange([
-            new DataColumn("Name"),
-        ]);
-
-        XmlReaderSettings xmlsettings = new()
-        {
-            Async = false,
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            ValidationType = ValidationType.None,
-        };
+        if (PodcastTable == null) {
+            PodcastTable = new();
+            PodcastTable.Columns.AddRange([
+                new DataColumn("Name"),
+            ]);
+        }
 
         this.PodcastView.Clear();
         PodcastTable.Clear();
         Podcasts.Clear();
-        using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
-        {
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
-                {
-                    string PodcastTitle = reader.GetAttribute("text") ?? "";
-                    string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
 
-                    if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
+        if (File.Exists(OpmlFile))
+        {
+            UpdateStatus("Populating Podcast list from OPML...");
+
+            XmlReaderSettings xmlsettings = new()
+            {
+                Async = false,
+                IgnoreComments = true,
+                IgnoreWhitespace = true,
+                ValidationType = ValidationType.None,
+            };
+
+            using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
+            {
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
                     {
-                        Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
-                        Podcasts.Add(podcast);
-                        PodcastTable.Rows.Add([podcast.Item1]);
+                        string PodcastTitle = reader.GetAttribute("text") ?? "";
+                        string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
+
+                        if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
+                        {
+                            Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
+                            Podcasts.Add(podcast);
+                            PodcastTable.Rows.Add([podcast.Item1]);
+                        }
                     }
                 }
             }
+
+            UpdateStatus(string.Format("{0} podcasts loaded...", Podcasts?.Count));
         }
 
         this.PodcastView.SetNeedsDisplay();
-        UpdateStatus(string.Format("{0} podcasts loaded...", Podcasts.Count));
 
         return PodcastTable;
     }
@@ -324,11 +350,11 @@ public class MainWindow : Toplevel
     private void OnPodcastSelect(View.KeyEventEventArgs e)
     {
         KeyEvent keyEvent = e.KeyEvent;
-        if (keyEvent.Key == Key.Enter)
+        if (keyEvent.Key == Key.Space)
         {
             int SelectedRowIndex = this.PodcastView.SelectedRow;
 
-            if (SelectedRowIndex < Podcasts.Count)
+            if (SelectedRowIndex >= 0 && SelectedRowIndex < Podcasts.Count)
             {
                 SelectedPodcast = Podcasts[SelectedRowIndex];
                 GetEpisodes(SelectedPodcast.Item2);
@@ -341,7 +367,7 @@ public class MainWindow : Toplevel
     private void OnEpisodeSelect(View.KeyEventEventArgs e)
     {
         KeyEvent keyEvent = e.KeyEvent;
-        if (keyEvent.Key == Key.Enter)
+        if (keyEvent.Key == Key.Space)
         {
             int SelectedRowIndex = this.EpisodeView.SelectedRow;
 
@@ -351,8 +377,8 @@ public class MainWindow : Toplevel
 
                 UpdateStatus(string.Format("Playing {0}...", SelectedEpisode.Item1));
 
-                PodcastEpisodePlayer player = new(SelectedEpisode.Item2);
-                player.Play();
+                Player = new(SelectedEpisode.Item2);
+                Player.Play();
             }
 
             e.Handled = true;
