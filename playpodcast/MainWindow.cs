@@ -223,12 +223,12 @@ public class MainWindow : Toplevel
 
     private Task GetEpisodes(string feedUrl)
     {
-        Console.WriteLine("getting episodes..."); // DEBUG:
-
         if (!string.IsNullOrWhiteSpace(feedUrl))
         {
             Uri url = new(feedUrl);
 
+            this.EpisodeView.Clear();
+            EpisodesTable.Clear();
             Episodes.Clear();
 
             string content = "";
@@ -266,20 +266,30 @@ public class MainWindow : Toplevel
 
                         using (XmlReader itemReader = reader.ReadSubtree())
                         {
-                            if (itemReader.Name == "title") {
-                                EpisodeTitle = itemReader.Value ?? "";
-                            }
+                            while (itemReader.Read())
+                            {
+                                if (itemReader.NodeType == XmlNodeType.Element)
+                                {
+                                    if (itemReader.Name == "title") {
+                                        EpisodeTitle = itemReader.ReadInnerXml() ?? "";
+                                        if (EpisodeTitle.ToUpper().StartsWith("<![CDATA["))
+                                        {
+                                            int cdataopen = "<![CDATA[".Length;
+                                            int cdataclose = "]]>".Length;
+                                            EpisodeTitle = EpisodeTitle.Substring(cdataopen, EpisodeTitle.Length - cdataopen - cdataclose).Trim();
+                                        }
+                                    }
 
-                            if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null) {
-                                EpisodeUrl = itemReader.GetAttribute("url") ?? "";
+                                    if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null) {
+                                        EpisodeUrl = itemReader.GetAttribute("url") ?? "";
+                                    }
+                                }
                             }
                         }
 
-                        // Console.WriteLine("Title: {0}, Url: {1}", EpisodeTitle, EpisodeUrl); // DEBUG:
-
                         if (!string.IsNullOrWhiteSpace(EpisodeTitle) && !string.IsNullOrWhiteSpace(EpisodeUrl))
                         {
-                            Tuple<string, string> episode = new(EpisodeTitle, "");
+                            Tuple<string, string> episode = new(EpisodeTitle, EpisodeUrl);
                             Episodes.Add(episode);
                             EpisodesTable.Rows.Add([episode.Item1]);
                         }
@@ -288,7 +298,7 @@ public class MainWindow : Toplevel
             }
         }
 
-        Console.WriteLine("episodes done"); // DEBUG:
+        this.EpisodeView.SetNeedsDisplay();
 
         return Task.CompletedTask;
     }
