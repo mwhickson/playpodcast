@@ -1,6 +1,4 @@
 using System.Data;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Xml;
 using Terminal.Gui;
 
@@ -22,6 +20,7 @@ public class MainWindow : Toplevel
     private List<Tuple<string, string>> Podcasts { get; set; } = [];
     private List<Tuple<string, string>> Episodes { get; set; } = [];
     private Tuple<string, string> SelectedPodcast { get; set; }
+    private Tuple<string, string> SelectedEpisode { get; set; }
     private TableView PodcastView { get; set; }
     private TableView EpisodeView { get; set; }
     public DataTable PodcastTable { get; set; }
@@ -131,8 +130,7 @@ public class MainWindow : Toplevel
             new DataColumn("Published"),
         ]);
 
-        // EpisodesTable.Rows.Add(["A sample episode", "1 minute", DateTime.Now.ToShortTimeString()]);
-
+        EpisodeView.KeyUp += OnEpisodeSelect;
         EpisodeView.Table = EpisodesTable;
 
         episodePane.Add(EpisodeView);
@@ -198,6 +196,8 @@ public class MainWindow : Toplevel
             ValidationType = ValidationType.None,
         };
 
+        this.PodcastView.Clear();
+        PodcastTable.Clear();
         Podcasts.Clear();
         using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
         {
@@ -314,6 +314,28 @@ public class MainWindow : Toplevel
             {
                 SelectedPodcast = Podcasts[SelectedRowIndex];
                 GetEpisodes(SelectedPodcast.Item2);
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    private void OnEpisodeSelect(View.KeyEventEventArgs e)
+    {
+        KeyEvent keyEvent = e.KeyEvent;
+        if (keyEvent.Key == Key.Enter)
+        {
+            int SelectedRowIndex = this.EpisodeView.SelectedRow;
+
+            if (SelectedRowIndex < Episodes.Count)
+            {
+                SelectedEpisode = Episodes[SelectedRowIndex];
+
+                // Console.WriteLine("Playing {0}", SelectedEpisode.Item1);
+                PodcastEpisodePlayer player = new(SelectedEpisode.Item2);
+                player.Play();
+
+                // player.Stop();
             }
 
             e.Handled = true;

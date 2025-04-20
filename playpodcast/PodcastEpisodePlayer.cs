@@ -32,7 +32,7 @@ public class PodcastEpisodePlayer
 			this.audio = new(vlc, new Uri(this.EpisodeUrl));
 			this.player = new(audio);
 
-			Console.WriteLine("playing {0}...", this.EpisodeUrl);
+			// Console.WriteLine("playing {0}...", this.EpisodeUrl);
 
 			this.player.Play();
 		}
