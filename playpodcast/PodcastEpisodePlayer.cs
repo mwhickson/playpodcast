@@ -31,14 +31,11 @@ public class PodcastEpisodePlayer
 		{
 			this.audio = new(vlc, new Uri(this.EpisodeUrl));
 			this.player = new(audio);
-
-			// Console.WriteLine("playing {0}...", this.EpisodeUrl);
-
 			this.player.Play();
 		}
 		else
 		{
-			Console.WriteLine("ERROR: Cannot start playback. No episode specified.");
+			throw new Exception("ERROR: Cannot start playback. No episode specified.");
 		}
 	}
 
@@ -50,19 +47,13 @@ public class PodcastEpisodePlayer
 			this.player.Dispose();
 		}
 
-		Console.WriteLine("Playback stopped.");
-
-		Console.BackgroundColor = ConsoleColor.Black;
-		Console.ForegroundColor = ConsoleColor.White;
-
 		this.audio?.Dispose();
-
 		this.vlc.Dispose();
 	}
 
 	private static Task VlcDisplayError(string? title, string? text)
 	{
-		Console.WriteLine("VLC-ERROR: {0}", text);
+		// Console.WriteLine("VLC-ERROR: {0}", text);
 		return Task.CompletedTask;
 	}
 

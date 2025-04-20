@@ -259,6 +259,8 @@ public class MainWindow : Toplevel
 
                         if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
                         {
+                            UpdateStatus(string.Format("Adding podcast {0}...", PodcastTitle));
+
                             Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
                             Podcasts.Add(podcast);
                             PodcastTable.Rows.Add([podcast.Item1]);
@@ -351,6 +353,8 @@ public class MainWindow : Toplevel
 
                         if (!string.IsNullOrWhiteSpace(EpisodeTitle) && !string.IsNullOrWhiteSpace(EpisodeUrl))
                         {
+                            UpdateStatus(string.Format("Adding episode {0}...", EpisodeTitle));
+
                             Tuple<string, string> episode = new(EpisodeTitle, EpisodeUrl);
                             Episodes.Add(episode);
                             EpisodesTable.Rows.Add([episode.Item1]);
@@ -369,8 +373,15 @@ public class MainWindow : Toplevel
 
     private void UpdateStatus(string message)
     {
-        MainStatus.Items[0].Title = message;
+        MainStatus.Items = [
+            new StatusItem(Key.Null, message, null),
+        ];
         MainStatus.SetNeedsDisplay();
+
+        // MainStatus.Items[0].Title = message;
+        // MainStatus.SetChildNeedsDisplay();
+        // MainStatus.SetNeedsDisplay();
+        // MainStatus.Redraw(MainStatus.Bounds);
     }
 
     private void OnPodcastSelect(View.KeyEventEventArgs e)
@@ -399,12 +410,19 @@ public class MainWindow : Toplevel
 
             if (SelectedRowIndex < Episodes.Count)
             {
+                if (SelectedEpisode != null && !string.IsNullOrWhiteSpace(SelectedEpisode.Item2) &&  Player != null)
+                {
+                    Player.Stop();
+                }
+
                 SelectedEpisode = Episodes[SelectedRowIndex];
 
-                UpdateStatus(string.Format("Playing {0}...", SelectedEpisode.Item1));
+                UpdateStatus(string.Format("Starting playback of episode {0}...", SelectedEpisode.Item1));
 
                 Player = new(SelectedEpisode.Item2);
                 Player.Play();
+
+                UpdateStatus(string.Format("Playing {0}...", SelectedEpisode.Item1));
             }
 
             e.Handled = true;
