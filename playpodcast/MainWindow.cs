@@ -11,6 +11,8 @@ public class MainWindow : Toplevel
     private static readonly string fileNewMenuText = "_New from URL...";
     private static readonly string fileOpenMenuText = "_Open OPML...";
     private static readonly string fileQuitMenuText = "_Quit";
+    private static readonly string toolsMenuText = "_Tools";
+    private static readonly string toolsFindMenuText = "_Find a podcast...";
     private static readonly string helpMenuText = "_Help";
     private static readonly string helpAboutMenuText = "_About";
     private static readonly string podcastsTitle = "Podcasts";
@@ -25,8 +27,8 @@ public class MainWindow : Toplevel
     private TableView EpisodeView { get; set; }
     public DataTable PodcastTable { get; set; }
     public DataTable EpisodesTable { get; set; }
-    public StatusBar MainStatus {get; set; }
-    PodcastEpisodePlayer Player {get; set; }
+    public StatusBar MainStatus { get; set; }
+    PodcastEpisodePlayer Player { get; set; }
 
     public MainWindow()
     {
@@ -48,6 +50,11 @@ public class MainWindow : Toplevel
                         new MenuItem(fileNewMenuText, "", OnNewFromURL, null, null, Key.N | Key.CtrlMask),
                         new MenuItem(fileOpenMenuText, "", OnOpenFromOPML, null, null, Key.O | Key.CtrlMask),
                         new MenuItem(fileQuitMenuText, "", OnQuit, null, null, Key.Q | Key.CtrlMask),
+                    ]),
+                new MenuBarItem(
+                    toolsMenuText,
+                    [
+                        new MenuItem(toolsFindMenuText, "", OnFindPodcast, null, null, Key.F3),
                     ]),
                 new MenuBarItem(
                     helpMenuText,
@@ -155,17 +162,24 @@ public class MainWindow : Toplevel
 
     private void OnQuit()
     {
-         RequestStop();
+        RequestStop();
+    }
+
+    private void ShowNotImplemented()
+    {
+        MessageBox.Query("Not implemented", "Not just yet...", "_Ok");
     }
 
     private void OnNewFromURL()
     {
+        ShowNotImplemented();
         // TODO:
     }
 
     private void OnOpenFromOPML()
     {
-        OpenDialog dialog = new() {
+        OpenDialog dialog = new()
+        {
             AllowedFileTypes = ["opml", "xml"],
             AllowsMultipleSelection = false,
             AutoSize = true,
@@ -176,14 +190,22 @@ public class MainWindow : Toplevel
 
         Application.Run(dialog);
 
-        if (!dialog.Canceled && !string.IsNullOrWhiteSpace(dialog.FilePath.ToString())) {
+        if (!dialog.Canceled && !string.IsNullOrWhiteSpace(dialog.FilePath?.ToString()))
+        {
             string FileName = dialog.FilePath.ToString();
-            if (File.Exists(FileName)) {
+            if (File.Exists(FileName))
+            {
                 OpmlFile = FileName;
                 OnPodcastsPopulate();
                 this.PodcastView.SetNeedsDisplay();
             }
         }
+    }
+
+    private void OnFindPodcast()
+    {
+        ShowNotImplemented();
+        // TODO: iTunes search
     }
 
     private void OnShowAbout()
@@ -202,7 +224,8 @@ public class MainWindow : Toplevel
 
     private DataTable OnPodcastsPopulate()
     {
-        if (PodcastTable == null) {
+        if (PodcastTable == null)
+        {
             PodcastTable = new();
             PodcastTable.Columns.AddRange([
                 new DataColumn("Name"),
@@ -267,7 +290,8 @@ public class MainWindow : Toplevel
             int episodeCount = 0;
 
             string content = "";
-            using (HttpClient client = new()) {
+            using (HttpClient client = new())
+            {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/9.9 (github.com/mwhickson/playpodcast) Chrome/999.9.9.9 Gecko/99990101 Firefox/999 Safari/999.9");
 
                 HttpResponseMessage response = Task.Run(() => client.GetAsync(url)).Result;
@@ -306,7 +330,8 @@ public class MainWindow : Toplevel
                             {
                                 if (itemReader.NodeType == XmlNodeType.Element)
                                 {
-                                    if (itemReader.Name == "title") {
+                                    if (itemReader.Name == "title")
+                                    {
                                         EpisodeTitle = itemReader.ReadInnerXml() ?? "";
                                         if (EpisodeTitle.ToUpper().StartsWith("<![CDATA["))
                                         {
@@ -316,7 +341,8 @@ public class MainWindow : Toplevel
                                         }
                                     }
 
-                                    if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null) {
+                                    if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null)
+                                    {
                                         EpisodeUrl = itemReader.GetAttribute("url") ?? "";
                                     }
                                 }
