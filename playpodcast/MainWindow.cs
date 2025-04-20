@@ -32,9 +32,9 @@ public class MainWindow : Toplevel
         ColorScheme = Colors.Base;
 
         Add(CreateMenu());
+        Add(CreateStatusBar());
         Add(CreatePodcastsPane());
         Add(CreateEpisodesPane());
-        Add(CreateStatusBar());
     }
 
     private MenuBar CreateMenu()
@@ -146,7 +146,7 @@ public class MainWindow : Toplevel
         };
 
         MainStatus.Items = [
-            new StatusItem(Key.Null, "CTRL+Q to Quit", () => {}),
+            new StatusItem(Key.Null, "ready...", () => {}),
         ];
 
         return MainStatus;
@@ -183,6 +183,8 @@ public class MainWindow : Toplevel
 
     private DataTable OnPodcastsPopulate()
     {
+        UpdateStatus("Populating Podcast list from OPML...");
+
         PodcastTable = new();
         PodcastTable.Columns.AddRange([
             new DataColumn("Name"),
@@ -218,6 +220,9 @@ public class MainWindow : Toplevel
             }
         }
 
+        this.PodcastView.SetNeedsDisplay();
+        UpdateStatus(string.Format("{0} podcasts loaded...", Podcasts.Count));
+
         return PodcastTable;
     }
 
@@ -225,11 +230,15 @@ public class MainWindow : Toplevel
     {
         if (!string.IsNullOrWhiteSpace(feedUrl))
         {
+            UpdateStatus("Loading episodes...");
+
             Uri url = new(feedUrl);
 
             this.EpisodeView.Clear();
             EpisodesTable.Clear();
             Episodes.Clear();
+
+            int episodeCount = 0;
 
             string content = "";
             using (HttpClient client = new()) {
@@ -240,6 +249,8 @@ public class MainWindow : Toplevel
 
                 content = Task.Run(() => response.Content.ReadAsStringAsync()).Result;
             }
+
+            UpdateStatus("Processing feed...");
 
             XmlReaderSettings xmlsettings = new()
             {
@@ -254,7 +265,6 @@ public class MainWindow : Toplevel
             string EpisodeUrl = "";
             using (XmlReader reader = XmlReader.Create(contentReader, xmlsettings))
             {
-                int episodeCount = 0;
 
                 while (reader.Read())
                 {
@@ -296,11 +306,19 @@ public class MainWindow : Toplevel
                     }
                 }
             }
+
+            UpdateStatus(string.Format("Viewing {0} [{1} episodes]", SelectedPodcast.Item1, episodeCount));
         }
 
         this.EpisodeView.SetNeedsDisplay();
 
         return Task.CompletedTask;
+    }
+
+    private void UpdateStatus(string message)
+    {
+        MainStatus.Items[0].Title = message;
+        MainStatus.SetNeedsDisplay();
     }
 
     private void OnPodcastSelect(View.KeyEventEventArgs e)
@@ -331,11 +349,10 @@ public class MainWindow : Toplevel
             {
                 SelectedEpisode = Episodes[SelectedRowIndex];
 
-                // Console.WriteLine("Playing {0}", SelectedEpisode.Item1);
+                UpdateStatus(string.Format("Playing {0}...", SelectedEpisode.Item1));
+
                 PodcastEpisodePlayer player = new(SelectedEpisode.Item2);
                 player.Play();
-
-                // player.Stop();
             }
 
             e.Handled = true;
