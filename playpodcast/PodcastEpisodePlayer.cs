@@ -1,37 +1,37 @@
 using LibVLCSharp.Shared;
 
+namespace playpodcast;
+
 public class PodcastEpisodePlayer
 {
-	public string EpisodeUrl { get; set; } = "";
+	private string? EpisodeUrl { get; }
 
-	const bool DEBUG_LOGGING = false;
-	private readonly LibVLC vlc = new(DEBUG_LOGGING, []);
+	private const bool DebugLogging = false;
+	private readonly LibVLC _vlc = new(DebugLogging);
 
-	private Media? audio;
-	private MediaPlayer? player;
+	private Media? _audio;
+	private MediaPlayer? _player;
 
-	private PodcastEpisodePlayer() { }
-
-	public PodcastEpisodePlayer(string episodeUrl)
+	public PodcastEpisodePlayer(string? episodeUrl)
 	{
-		this.vlc.SetDialogHandlers(
-			PodcastEpisodePlayer.VlcDisplayError,
-			PodcastEpisodePlayer.VlcDisplayLogin,
-			PodcastEpisodePlayer.VlcDisplayQuestion,
-			PodcastEpisodePlayer.VlcDisplayProgress,
-			PodcastEpisodePlayer.VlcUpdateProgress
+		_vlc.SetDialogHandlers(
+			VlcDisplayError,
+			VlcDisplayLogin,
+			VlcDisplayQuestion,
+			VlcDisplayProgress,
+			VlcUpdateProgress
 		);
 
-		this.EpisodeUrl = episodeUrl;
+		EpisodeUrl = episodeUrl;
 	}
 
 	public void Play()
 	{
-		if (!string.IsNullOrWhiteSpace(this.EpisodeUrl))
+		if (!string.IsNullOrWhiteSpace(EpisodeUrl))
 		{
-			this.audio = new(vlc, new Uri(this.EpisodeUrl));
-			this.player = new(audio);
-			this.player.Play();
+			_audio = new Media(_vlc, new Uri(EpisodeUrl));
+			_player = new MediaPlayer(_audio);
+			_player.Play();
 		}
 		else
 		{
@@ -41,14 +41,14 @@ public class PodcastEpisodePlayer
 
 	public void Stop()
 	{
-		if (this.player != null)
+		if (_player != null)
 		{
-			this.player.Stop();
-			this.player.Dispose();
+			_player.Stop();
+			_player.Dispose();
 		}
 
-		this.audio?.Dispose();
-		this.vlc.Dispose();
+		_audio?.Dispose();
+		_vlc.Dispose();
 	}
 
 	private static Task VlcDisplayError(string? title, string? text)
@@ -78,23 +78,15 @@ public class PodcastEpisodePlayer
 		// (could just cheat and call PostAction(1) blindly, but would prefer clarity of code and future proofing...)
 		//
 
-		if (title != null && title == "Insecure site" && token.CanBeCanceled)
+		if (title is not "Insecure site" || !token.CanBeCanceled) return Task.CompletedTask;
+		if (firstActionText == null) return Task.CompletedTask;
+		
+		switch (firstActionText)
 		{
-			if (firstActionText != null)
-			{
-				switch (firstActionText)
-				{
-					case "View certificate":
-						dialog.PostAction(1);
-						break;
-					case "Accept 24 hours":
-						dialog.PostAction(1);
-						break;
-					default:
-						// PASS:
-						break;
-				}
-			}
+			case "View certificate":
+			case "Accept 24 hours":
+				dialog.PostAction(1);
+				break;
 		}
 
 		return Task.CompletedTask;

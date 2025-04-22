@@ -1,8 +1,10 @@
 ﻿using Terminal.Gui;
 
-internal class Program
+namespace playpodcast;
+
+internal static class Program
 {
-    private static void Main(string[] args)
+    private static void Main()
     {
         Application.Init();
         Application.Run<MainWindow>();

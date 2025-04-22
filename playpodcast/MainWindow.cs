@@ -2,36 +2,42 @@ using System.Data;
 using System.Xml;
 using Terminal.Gui;
 
-public class MainWindow : Toplevel
-{
-    private static readonly int menuHeight = 1;
-    private static readonly int statusHeight = 1;
+namespace playpodcast;
 
-    private static readonly string fileMenuText = "_File";
-    private static readonly string fileNewMenuText = "_New from URL...";
-    private static readonly string fileOpenMenuText = "_Open OPML...";
-    private static readonly string fileQuitMenuText = "_Quit";
-    private static readonly string toolsMenuText = "_Tools";
-    private static readonly string toolsFindMenuText = "_Find a podcast...";
-    private static readonly string helpMenuText = "_Help";
-    private static readonly string helpAboutMenuText = "_About";
-    private static readonly string podcastsTitle = "Podcasts";
-    private static readonly string episodesTitle = "Episodes";
+public sealed class MainWindow : Toplevel
+{
+    private const int MenuHeight = 1;
+    private const int StatusHeight = 1;
+
+    private const string FileMenuText = "_File";
+    private const string FileNewMenuText = "_New from URL...";
+    private const string FileOpenMenuText = "_Open OPML...";
+    private const string FileQuitMenuText = "_Quit";
+    private const string ToolsMenuText = "_Tools";
+    private const string ToolsFindMenuText = "_Find a podcast...";
+    private const string HelpMenuText = "_Help";
+    private const string HelpAboutMenuText = "_About";
+    private const string PodcastsTitle = "Podcasts";
+    private const string EpisodesTitle = "Episodes";
 
     private string OpmlFile { get; set; } = "";
-    private List<Tuple<string, string>> Podcasts { get; set; } = [];
-    private List<Tuple<string, string>> Episodes { get; set; } = [];
-    private Tuple<string, string> SelectedPodcast { get; set; }
-    private Tuple<string, string> SelectedEpisode { get; set; }
-    private TableView PodcastView { get; set; }
-    private TableView EpisodeView { get; set; }
-    public DataTable PodcastTable { get; set; }
-    public DataTable EpisodesTable { get; set; }
-    public StatusBar MainStatus { get; set; }
-    PodcastEpisodePlayer Player { get; set; }
+    private List<Tuple<string, string?>?> Podcasts { get; } = [];
+    private List<Tuple<string, string?>?> Episodes { get; } = [];
+    private Tuple<string, string?>? SelectedPodcast { get; set; }
+    private Tuple<string, string?>? SelectedEpisode { get; set; }
+    private TableView? PodcastView { get; set; }
+    private TableView? EpisodeView { get; set; }
+    private DataTable PodcastTable { get; set; }
+    private DataTable EpisodesTable { get; set; }
+    private StatusBar MainStatus { get; set; }
+    private PodcastEpisodePlayer? Player { get; set; }
 
     public MainWindow()
     {
+        PodcastTable = new DataTable();
+        EpisodesTable = new DataTable();
+        MainStatus = new StatusBar();
+            
         ColorScheme = Colors.Base;
 
         Add(CreateMenu());
@@ -42,60 +48,79 @@ public class MainWindow : Toplevel
 
     private MenuBar CreateMenu()
     {
-        MenuBar MainMenu = new(
+        MenuBar mainMenu = new(
             [
                 new MenuBarItem(
-                    fileMenuText,
+                    FileMenuText,
                     [
-                        new MenuItem(fileNewMenuText, "", OnNewFromURL, null, null, Key.N | Key.CtrlMask),
-                        new MenuItem(fileOpenMenuText, "", OnOpenFromOPML, null, null, Key.O | Key.CtrlMask),
-                        new MenuItem(fileQuitMenuText, "", OnQuit, null, null, Key.Q | Key.CtrlMask),
+                        new MenuItem(FileNewMenuText, "", OnNewFromURL, null, null, Key.N | Key.CtrlMask),
+                        new MenuItem(FileOpenMenuText, "", OnOpenFromOPML, null, null, Key.O | Key.CtrlMask),
+                        new MenuItem(FileQuitMenuText, "", OnQuit, null, null, Key.Q | Key.CtrlMask)
                     ]),
                 new MenuBarItem(
-                    toolsMenuText,
+                    ToolsMenuText,
                     [
-                        new MenuItem(toolsFindMenuText, "", OnFindPodcast, null, null, Key.F3),
+                        new MenuItem(ToolsFindMenuText, "", OnFindPodcast, null, null, Key.F3)
                     ]),
                 new MenuBarItem(
-                    helpMenuText,
+                    HelpMenuText,
                     [
-                        new MenuItem(helpAboutMenuText, "", OnShowAbout, null, null, Key.F1),
-                    ]),
+                        new MenuItem(HelpAboutMenuText, "", OnShowAbout, null, null, Key.F1)
+                    ])
             ]
         );
 
-        return MainMenu;
+        return mainMenu;
+    }
+
+    private StatusBar CreateStatusBar()
+    {
+        MainStatus = new StatusBar
+        {
+            Visible = true
+        };
+
+        MainStatus.Items = [
+            new StatusItem(Key.Null, "ready...", () => {})
+        ];
+
+        return MainStatus;
     }
 
     private FrameView CreatePodcastsPane()
     {
-        FrameView podcastPane = new(podcastsTitle)
+        FrameView podcastPane = new(PodcastsTitle)
         {
             X = 0,
-            Y = menuHeight,
-            Width = Dim.Fill(0),
-            Height = Dim.Percent(40) - menuHeight,
-            CanFocus = true,
+            Y = MenuHeight,
+            Width = Dim.Fill(),
+            Height = Dim.Percent(40) - MenuHeight,
+            CanFocus = true
         };
 
-        PodcastView = new()
+        PodcastView = new TableView
         {
             X = 1,
             Y = 0,
             Width = Dim.Fill(1),
             Height = Dim.Percent(100),
             FullRowSelect = true,
-            Style = new TableView.TableStyle()
+            Style = new TableView.TableStyle
             {
                 AlwaysShowHeaders = true,
                 ShowHorizontalHeaderOverline = false,
                 ShowHorizontalHeaderUnderline = false,
                 ShowVerticalCellLines = false,
-                ShowVerticalHeaderLines = false,
-            },
+                ShowVerticalHeaderLines = false
+            }
         };
 
         PodcastView.KeyUp += OnPodcastSelect;
+        
+        PodcastTable = new DataTable();
+        PodcastTable.Columns.AddRange([
+            new DataColumn("Name")
+        ]);
         PodcastView.Table = OnPodcastsPopulate();
 
         podcastPane.Add(PodcastView);
@@ -105,37 +130,37 @@ public class MainWindow : Toplevel
 
     private FrameView CreateEpisodesPane()
     {
-        FrameView episodePane = new(episodesTitle)
+        FrameView episodePane = new(EpisodesTitle)
         {
             X = 0,
             Y = Pos.Percent(40),
-            Width = Dim.Fill(0),
-            Height = Dim.Fill(0) - statusHeight,
-            CanFocus = true,
+            Width = Dim.Fill(),
+            Height = Dim.Fill() - StatusHeight,
+            CanFocus = true
         };
 
-        EpisodeView = new()
+        EpisodeView = new TableView
         {
             X = 1,
             Y = 0,
             Width = Dim.Fill(1),
             Height = Dim.Percent(100),
             FullRowSelect = true,
-            Style = new TableView.TableStyle()
+            Style = new TableView.TableStyle
             {
                 AlwaysShowHeaders = true,
                 ShowHorizontalHeaderOverline = false,
                 ShowHorizontalHeaderUnderline = false,
                 ShowVerticalCellLines = false,
-                ShowVerticalHeaderLines = false,
-            },
+                ShowVerticalHeaderLines = false
+            }
         };
 
-        EpisodesTable = new();
+        EpisodesTable = new DataTable();
         EpisodesTable.Columns.AddRange([
-            new DataColumn("Name"),
-            new DataColumn("Duration"),
-            new DataColumn("Published"),
+            new DataColumn("Name")
+            // new DataColumn("Duration"),
+            // new DataColumn("Published")
         ]);
 
         EpisodeView.KeyUp += OnEpisodeSelect;
@@ -145,32 +170,18 @@ public class MainWindow : Toplevel
 
         return episodePane;
     }
-
-    private StatusBar CreateStatusBar()
-    {
-        MainStatus = new()
-        {
-            Visible = true,
-        };
-
-        MainStatus.Items = [
-            new StatusItem(Key.Null, "ready...", () => {}),
-        ];
-
-        return MainStatus;
-    }
-
+    
     private void OnQuit()
     {
         RequestStop();
     }
 
-    private void ShowNotImplemented()
+    private static void ShowNotImplemented()
     {
         MessageBox.Query("Not implemented", "Not just yet...", "_Ok");
     }
 
-    private void OnNewFromURL()
+    private static void OnNewFromURL()
     {
         ShowNotImplemented();
         // TODO:
@@ -185,54 +196,44 @@ public class MainWindow : Toplevel
             AutoSize = true,
             Message = "Select an OPML file...",
             Title = "Open OPML file",
-            Visible = true,
+            Visible = true
         };
 
         Application.Run(dialog);
 
-        if (!dialog.Canceled && !string.IsNullOrWhiteSpace(dialog.FilePath?.ToString()))
-        {
-            string FileName = dialog.FilePath.ToString();
-            if (File.Exists(FileName))
-            {
-                OpmlFile = FileName;
-                OnPodcastsPopulate();
-                this.PodcastView.SetNeedsDisplay();
-            }
-        }
+        if (dialog.Canceled || string.IsNullOrWhiteSpace(dialog.FilePath?.ToString())) return;
+        
+        var fileName = dialog.FilePath.ToString();
+        
+        if (!File.Exists(fileName)) return;
+        OpmlFile = fileName;
+        OnPodcastsPopulate();
+        PodcastView?.SetNeedsDisplay();
     }
 
-    private void OnFindPodcast()
+    private static void OnFindPodcast()
     {
         ShowNotImplemented();
         // TODO: iTunes search
     }
 
-    private void OnShowAbout()
+    private static void OnShowAbout()
     {
         MessageBox.Query(
             "About playpodcast",
             "\nA podcast player."
-                + "\n\ngithub.com/mwhickson/playpodcast"
-                + "\n\n(c) 2025 Matthew Hickson"
-                + "\n\n- using -"
-                + "\nLibVLCSharp"
-                + "\nTerminal.Gui",
+            + "\n\ngithub.com/mwhickson/playpodcast"
+            + "\n\n(c) 2025 Matthew Hickson"
+            + "\n\n- using -"
+            + "\nLibVLCSharp"
+            + "\nTerminal.Gui",
             "_Ok"
         );
     }
 
     private DataTable OnPodcastsPopulate()
     {
-        if (PodcastTable == null)
-        {
-            PodcastTable = new();
-            PodcastTable.Columns.AddRange([
-                new DataColumn("Name"),
-            ]);
-        }
-
-        this.PodcastView.Clear();
+        PodcastView?.Clear();
         PodcastTable.Clear();
         Podcasts.Clear();
 
@@ -245,39 +246,35 @@ public class MainWindow : Toplevel
                 Async = false,
                 IgnoreComments = true,
                 IgnoreWhitespace = true,
-                ValidationType = ValidationType.None,
+                ValidationType = ValidationType.None
             };
 
-            using (XmlReader reader = XmlReader.Create(OpmlFile, xmlsettings))
+            using (var reader = XmlReader.Create(OpmlFile, xmlsettings))
             {
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "outline")
-                    {
-                        string PodcastTitle = reader.GetAttribute("text") ?? "";
-                        string PodcastUrl = reader.GetAttribute("xmlUrl") ?? "";
+                    if (reader.NodeType != XmlNodeType.Element || reader.Name != "outline") continue;
+                    var podcastTitle = reader.GetAttribute("text") ?? "";
+                    var podcastUrl = reader.GetAttribute("xmlUrl") ?? "";
 
-                        if (!string.IsNullOrWhiteSpace(PodcastTitle) && !string.IsNullOrWhiteSpace(PodcastUrl))
-                        {
-                            UpdateStatus(string.Format("Adding podcast {0}...", PodcastTitle));
+                    if (string.IsNullOrWhiteSpace(podcastTitle) || string.IsNullOrWhiteSpace(podcastUrl)) continue;
+                    UpdateStatus($"Adding podcast {podcastTitle}...");
 
-                            Tuple<string, string> podcast = new(PodcastTitle, PodcastUrl);
-                            Podcasts.Add(podcast);
-                            PodcastTable.Rows.Add([podcast.Item1]);
-                        }
-                    }
+                    Tuple<string, string?> podcast = new(podcastTitle, podcastUrl);
+                    Podcasts.Add(podcast);
+                    PodcastTable.Rows.Add(podcast.Item1);
                 }
             }
 
-            UpdateStatus(string.Format("{0} podcasts loaded...", Podcasts?.Count));
+            UpdateStatus($"{Podcasts.Count} podcasts loaded...");
         }
 
-        this.PodcastView.SetNeedsDisplay();
+        PodcastView?.SetNeedsDisplay();
 
         return PodcastTable;
     }
 
-    private Task GetEpisodes(string feedUrl)
+    private void GetEpisodes(string? feedUrl)
     {
         if (!string.IsNullOrWhiteSpace(feedUrl))
         {
@@ -285,22 +282,19 @@ public class MainWindow : Toplevel
 
             Uri url = new(feedUrl);
 
-            this.EpisodeView.Clear();
+            EpisodeView?.Clear();
             EpisodesTable.Clear();
             Episodes.Clear();
 
-            int episodeCount = 0;
+            var episodeCount = 0;
 
-            string content = "";
-            using (HttpClient client = new())
-            {
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/9.9 (github.com/mwhickson/playpodcast) Chrome/999.9.9.9 Gecko/99990101 Firefox/999 Safari/999.9");
+            HttpClient client = new();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/9.9 (github.com/mwhickson/playpodcast) Chrome/999.9.9.9 Gecko/99990101 Firefox/999 Safari/999.9");
 
-                HttpResponseMessage response = Task.Run(() => client.GetAsync(url)).Result;
-                response.EnsureSuccessStatusCode();
+            var response = Task.Run(() => client.GetAsync(url)).Result;
+            response.EnsureSuccessStatusCode();
 
-                content = Task.Run(() => response.Content.ReadAsStringAsync()).Result;
-            }
+            var content = Task.Run(() => response.Content.ReadAsStringAsync()).Result;
 
             UpdateStatus("Processing feed...");
 
@@ -309,72 +303,63 @@ public class MainWindow : Toplevel
                 Async = false,
                 IgnoreComments = true,
                 IgnoreWhitespace = true,
-                ValidationType = ValidationType.None,
+                ValidationType = ValidationType.None
             };
 
             StringReader contentReader = new(content);
-            string EpisodeTitle = "";
-            string EpisodeUrl = "";
-            using (XmlReader reader = XmlReader.Create(contentReader, xmlsettings))
+            using (var reader = XmlReader.Create(contentReader, xmlsettings))
             {
-
                 while (reader.Read())
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "item")
+                    if (reader.NodeType != XmlNodeType.Element || reader.Name != "item") continue;
+                    
+                    episodeCount++;
+                    var episodeTitle = "";
+                    var episodeUrl = "";
+
+                    using (var itemReader = reader.ReadSubtree())
                     {
-                        episodeCount++;
-                        EpisodeTitle = "";
-                        EpisodeUrl = "";
-
-                        using (XmlReader itemReader = reader.ReadSubtree())
+                        while (itemReader.Read())
                         {
-                            while (itemReader.Read())
+                            if (itemReader.NodeType != XmlNodeType.Element) continue;
+                            if (itemReader.Name == "title")
                             {
-                                if (itemReader.NodeType == XmlNodeType.Element)
+                                episodeTitle = itemReader.ReadInnerXml();
+                                if (episodeTitle.StartsWith("<![CDATA[", StringComparison.CurrentCultureIgnoreCase))
                                 {
-                                    if (itemReader.Name == "title")
-                                    {
-                                        EpisodeTitle = itemReader.ReadInnerXml() ?? "";
-                                        if (EpisodeTitle.ToUpper().StartsWith("<![CDATA["))
-                                        {
-                                            int cdataopen = "<![CDATA[".Length;
-                                            int cdataclose = "]]>".Length;
-                                            EpisodeTitle = EpisodeTitle.Substring(cdataopen, EpisodeTitle.Length - cdataopen - cdataclose).Trim();
-                                        }
-                                    }
-
-                                    if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null)
-                                    {
-                                        EpisodeUrl = itemReader.GetAttribute("url") ?? "";
-                                    }
+                                    var cdataopen = "<![CDATA[".Length;
+                                    var cdataclose = "]]>".Length;
+                                    episodeTitle = episodeTitle.Substring(cdataopen, episodeTitle.Length - cdataopen - cdataclose).Trim();
                                 }
                             }
-                        }
 
-                        if (!string.IsNullOrWhiteSpace(EpisodeTitle) && !string.IsNullOrWhiteSpace(EpisodeUrl))
-                        {
-                            UpdateStatus(string.Format("Adding episode {0}...", EpisodeTitle));
-
-                            Tuple<string, string> episode = new(EpisodeTitle, EpisodeUrl);
-                            Episodes.Add(episode);
-                            EpisodesTable.Rows.Add([episode.Item1]);
+                            if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null)
+                            {
+                                episodeUrl = itemReader.GetAttribute("url") ?? "";
+                            }
                         }
                     }
+
+                    if (string.IsNullOrWhiteSpace(episodeTitle) || string.IsNullOrWhiteSpace(episodeUrl)) continue;
+                    
+                    UpdateStatus($"Adding episode {episodeTitle}...");
+
+                    Tuple<string, string?> episode = new(episodeTitle, episodeUrl);
+                    Episodes.Add(episode);
+                    EpisodesTable.Rows.Add(episode.Item1);
                 }
             }
 
-            UpdateStatus(string.Format("Viewing {0} [{1} episodes]", SelectedPodcast.Item1, episodeCount));
+            UpdateStatus($"Viewing {SelectedPodcast?.Item1} [{episodeCount} episodes]");
         }
 
-        this.EpisodeView.SetNeedsDisplay();
-
-        return Task.CompletedTask;
+        EpisodeView?.SetNeedsDisplay();
     }
 
     private void UpdateStatus(string message)
     {
         MainStatus.Items = [
-            new StatusItem(Key.Null, message, null),
+            new StatusItem(Key.Null, message, null)
         ];
         MainStatus.SetNeedsDisplay();
 
@@ -384,48 +369,50 @@ public class MainWindow : Toplevel
         // MainStatus.Redraw(MainStatus.Bounds);
     }
 
-    private void OnPodcastSelect(View.KeyEventEventArgs e)
+    private void OnPodcastSelect(KeyEventEventArgs e)
     {
-        KeyEvent keyEvent = e.KeyEvent;
-        if (keyEvent.Key == Key.Space)
+        var keyEvent = e.KeyEvent;
+        if (keyEvent.Key != Key.Space) return;
+        if (PodcastView != null)
         {
-            int SelectedRowIndex = this.PodcastView.SelectedRow;
+            var selectedRowIndex = PodcastView.SelectedRow;
 
-            if (SelectedRowIndex >= 0 && SelectedRowIndex < Podcasts.Count)
+            if (selectedRowIndex >= 0 && selectedRowIndex < Podcasts.Count)
             {
-                SelectedPodcast = Podcasts[SelectedRowIndex];
-                GetEpisodes(SelectedPodcast.Item2);
+                SelectedPodcast = Podcasts[selectedRowIndex];
+                GetEpisodes(SelectedPodcast?.Item2);
             }
-
-            e.Handled = true;
         }
+
+        e.Handled = true;
     }
 
-    private void OnEpisodeSelect(View.KeyEventEventArgs e)
+    private void OnEpisodeSelect(KeyEventEventArgs e)
     {
-        KeyEvent keyEvent = e.KeyEvent;
-        if (keyEvent.Key == Key.Space)
+        var keyEvent = e.KeyEvent;
+        if (keyEvent.Key != Key.Space) return;
+        if (EpisodeView != null)
         {
-            int SelectedRowIndex = this.EpisodeView.SelectedRow;
+            var selectedRowIndex = EpisodeView.SelectedRow;
 
-            if (SelectedRowIndex < Episodes.Count)
+            if (selectedRowIndex < Episodes.Count)
             {
                 if (SelectedEpisode != null && !string.IsNullOrWhiteSpace(SelectedEpisode.Item2) &&  Player != null)
                 {
                     Player.Stop();
                 }
 
-                SelectedEpisode = Episodes[SelectedRowIndex];
+                SelectedEpisode = Episodes[selectedRowIndex];
 
-                UpdateStatus(string.Format("Starting playback of episode {0}...", SelectedEpisode.Item1));
+                UpdateStatus($"Starting playback of episode {SelectedEpisode?.Item1}...");
 
-                Player = new(SelectedEpisode.Item2);
+                Player = new PodcastEpisodePlayer(SelectedEpisode?.Item2);
                 Player.Play();
 
-                UpdateStatus(string.Format("Playing {0}...", SelectedEpisode.Item1));
+                UpdateStatus($"Playing {SelectedEpisode?.Item1}...");
             }
-
-            e.Handled = true;
         }
+
+        e.Handled = true;
     }
 }
