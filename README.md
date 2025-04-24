@@ -14,24 +14,26 @@ And so, I opted for LibVLC and C# (via LibVLCSharp).
 
 Besides, it gives me the opportunity to use Terminal.GUI, which has also been an item on my TODO checklist.
 
+UPDATE: And... maybe when Terminal.GUI v2.0 lands I'll give it another look. Until then, it's nice, but not for this.
+
 Welcome to `playpodcast`!
 
 ## Features
 
 - cache for http calls
-- downloads for offline listening
 - iTunes search
 - OPML import/export
 - streaming playback
-- subscription management
 - view podcast and episode detail
+
+### Maybe...
+- downloads for offline listening
+- subscription management
 
 ## Tools
 
 - LibVLCSharp : https://github.com/videolan/libvlcsharp
-- Terminal.GUI : https://github.com/gui-cs/Terminal.Gui
 - iTunes Search API : https://performance-partners.apple.com/search-api
-- sqlite : https://www.sqlite.org/
 - XML, RSS, OPML
 
 ## Screenshots
