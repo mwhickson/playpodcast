@@ -37,14 +37,28 @@ internal static class Program
     {
         switch (command.ToLower())
         {
+            case "choose":
+            case "c":
+            case "*":
+                if (options.Count > 0)
+                {
+                    int requestedPodcastIndex = Convert.ToInt32(options.First());
+                    if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
+                    {
+                        selectedPodcast = podcasts[requestedPodcastIndex - 1];
+                        ThePrompt = selectedPodcast.Title;
+                    }
+                }
+                break;
+
             case "clear":
-            case "cl":
+            case "z":
                 Console.Clear();
                 DisplayProgramTitle();
                 break;
 
             case "episodes":
-            case "ep":
+            case "e":
                 if (selectedPodcast != null)
                 {
                     episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
@@ -64,8 +78,18 @@ internal static class Program
                 }
                 break;
 
+            case "history":
+            case "v":
+                // TODO:
+                break;
+
+            case "info":
+            case "i":
+                // TODO:
+                break;
+
             case "list":
-            case "li":
+            case "l":
                 if (options.Count > 0)
                 {
                     string listOptions = options.First().ToString();
@@ -96,21 +120,8 @@ internal static class Program
 
                 break;
 
-            case "pick":
-            case "pi":
-                if (options.Count > 0)
-                {
-                    int requestedPodcastIndex = Convert.ToInt32(options.First());
-                    if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
-                    {
-                        selectedPodcast = podcasts[requestedPodcastIndex - 1];
-                        ThePrompt = selectedPodcast.Title;
-                    }
-                }
-                break;
-
             case "play":
-            case "pl":
+            case "p":
                 if (options.Count > 0)
                 {
                     int requestedEpisodeIndex = Convert.ToInt32(options.First());
@@ -132,12 +143,13 @@ internal static class Program
                 break;
 
             case "search":
-            case "se":
+            case "s":
+            case "/":
                 // TODO:
                 break;
 
             case "stop":
-            case "st":
+            case "x":
                 if (ThePlayer != null)
                 {
                     ThePlayer.Stop();
@@ -145,7 +157,13 @@ internal static class Program
                 break;
 
             case "subscribe":
-            case "su":
+            case "+":
+                // TODO:
+                break;
+
+            case "unsubscribe":
+            case "u":
+            case "-":
                 // TODO:
                 break;
 
@@ -156,16 +174,19 @@ internal static class Program
                 // TODO: use a better table formatting solution...
                 List<string> commandList = new()
                 {
-                    "Quit:                  'quit'       : 'q'",
-                    "Help:                  'help'       : 'h' or '?'",
-                    "Clear screen:          'clear'      : 'cl'",
-                    "List episodes:         'episodes'   : 'ep'",
-                    "List podcasts:         'list'       : 'li'       | param: {string} 'refresh' : 'r'",
-                    "Select a podcast:      'pick'       : 'pi'       | param: {int} podcast index",
-                    "Play an episode:       'play'       : 'pl'       | param: {int} episode index",
-                    "Search for a podcast:  'search'     : 'se'       | param: {string} text to search for",
-                    "Stop playback:         'stop'       : 'st'",
-                    "Subscribe to podcast:  'subscribe'  : 'su'       | param: {int} podcast index from search results",
+                    "Quit:                      'quit'         : 'q'",
+                    "Help:                      'help'         : '?' or 'h'",
+                    "Choose a podcast:          'choose'       : '*' or 'c'  | param: {int} podcast index",
+                    "Clear screen:              'clear'        : 'z'",
+                    "List episodes:             'episodes'     : 'e'",
+                    "Show listening history:    'history'      : 'v'",
+                    "Show podcast/episode info: 'info'         : 'i'",
+                    "List podcasts:             'list'         : 'l'         | param: {string} 'refresh' : 'r'",
+                    "Play an episode:           'play'         : 'p'         | param: {int} episode index",
+                    "Search for a podcast:      'search'       : '/' or 's'  | param: {string} text to search for",
+                    "Stop playback:             'stop'         : 'x'",
+                    "Subscribe to podcast:      'subscribe'    : '+'         | param: {int} podcast index from search results",
+                    "Unsubscribe from podcast:  'unsubscribe'  : '-' or 'u'  | param: {int} podcast index",
                 };
 
                 Console.WriteLine("Available Commands:");
