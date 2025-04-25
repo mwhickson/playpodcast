@@ -12,11 +12,17 @@ internal static class Program
     private static List<Episode> episodes = [];
     private static Episode? selectedEpisode = null;
 
-    private static string DefaultPrompt = "playpodcast> ";
+    private static Player? ThePlayer;
 
-    private static string ReadPrompt(string prompt)
+    private static string DefaultPrompt = "enter command";
+    private static string ThePrompt = DefaultPrompt;
+
+    private static string ReadPrompt()
     {
-        Console.Write(prompt);
+        Console.WriteLine();
+        Console.WriteLine("[{0}]", ThePrompt);
+        Console.Write("> ");
+
         string? input = Console.ReadLine();
 
         return input ?? "";
@@ -98,7 +104,7 @@ internal static class Program
                     if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
                     {
                         selectedPodcast = podcasts[requestedPodcastIndex - 1];
-                        Console.WriteLine("Podcast [{0}] selected.", selectedPodcast.Title);
+                        ThePrompt = selectedPodcast.Title;
                     }
                 }
                 break;
@@ -112,10 +118,10 @@ internal static class Program
                     if (requestedEpisodeIndex > 0 && requestedEpisodeIndex <= episodes.Count)
                     {
                         selectedEpisode = episodes[requestedEpisodeIndex - 1];
-                        Console.WriteLine("Playing [{0}]...", selectedEpisode.Title);
+                        ThePrompt = string.Format("{0} :: {1}", selectedPodcast.Title, selectedEpisode.Title);
 
-                        Player player = new(selectedEpisode.Url);
-                        player.Play();
+                        ThePlayer = new(selectedEpisode.Url);
+                        ThePlayer.Play();
                     }
                 }
 
@@ -124,6 +130,14 @@ internal static class Program
             case "quit":
             case "q":
                 Environment.Exit(0);
+                break;
+
+            case "stop":
+            case "st":
+                if (ThePlayer != null)
+                {
+                    ThePlayer.Stop();
+                }
                 break;
 
             case "help": // fall-through
@@ -138,6 +152,7 @@ internal static class Program
                     "List episodes:    'episodes' : 'ep'",
                     "List podcasts:    'list'     : 'li'       | param: {string} 'refresh' : 'r'",
                     "Select a podcast: 'pick'     : 'pi'       | param: {int} podcast index",
+                    "Stop playback:    'stop'     : 'st'",
                     "Play an episode:  'play'     : 'pl'       | param: {int} episode index",
                 };
 
@@ -152,11 +167,11 @@ internal static class Program
     private static void DisplayProgramTitle()
     {
         Console.WriteLine("playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git");
-        Console.WriteLine();
     }
 
     private static void Setup()
     {
+        ThePrompt = DefaultPrompt;
         GetPodcasts(SubscriptionFile);
     }
 
@@ -171,7 +186,7 @@ internal static class Program
 
         while (true)
         {
-            string input = ReadPrompt(DefaultPrompt);
+            string input = ReadPrompt();
 
             List<string> parts = new(input.Split(" "));
             string command = parts.Count > 0 ? parts[0] : "";
