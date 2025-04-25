@@ -2,6 +2,10 @@ namespace playpodcast;
 
 internal static class Program
 {
+    private static Utility utility = new();
+
+    private static string SubscriptionFile = "";
+
     private static List<Podcast> podcasts = [];
     private static Podcast? selectedPodcast = null;
 
@@ -18,15 +22,23 @@ internal static class Program
         return input ?? "";
     }
 
+    private static void GetPodcasts(string subscriptionFile)
+    {
+        podcasts = Utility.LoadPodcastsFromFile(subscriptionFile);
+    }
+
     private static void ProcessCommand(string command, List<string> options)
     {
-        Utility utility = new();
-
-        string subscriptionFile = utility.DefaultSubscriptionFile;
-
         switch (command.ToLower())
         {
+            case "clear":
+            case "cl":
+                Console.Clear();
+                DisplayProgramTitle();
+                break;
+
             case "episodes":
+            case "ep":
                 if (selectedPodcast != null)
                 {
                     episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
@@ -47,10 +59,26 @@ internal static class Program
                 break;
 
             case "list":
-                podcasts = Utility.LoadPodcastsFromFile(subscriptionFile);
+            case "li":
+                if (options.Count > 0)
+                {
+                    string listOptions = options.First().ToString();
+
+                    switch (listOptions.ToLower())
+                    {
+                        case "refresh":
+                        case "r":
+                            GetPodcasts(SubscriptionFile);
+                            Console.WriteLine("Subscriptions reloaded.");
+                            break;
+                        default:
+                            // PASS:
+                            break;
+                    }
+                }
 
                 Console.WriteLine();
-                Console.WriteLine("Subscription List [{0}]:", subscriptionFile);
+                Console.WriteLine("Subscription List [{0}]:", SubscriptionFile);
                 Console.WriteLine();
 
                 int podcastIndex = 0;
@@ -63,6 +91,7 @@ internal static class Program
                 break;
 
             case "pick":
+            case "pi":
                 if (options.Count > 0)
                 {
                     int requestedPodcastIndex = Convert.ToInt32(options.First());
@@ -75,6 +104,7 @@ internal static class Program
                 break;
 
             case "play":
+            case "pl":
                 if (options.Count > 0)
                 {
                     int requestedEpisodeIndex = Convert.ToInt32(options.First());
@@ -92,10 +122,12 @@ internal static class Program
                 break;
 
             case "quit":
+            case "q":
                 Environment.Exit(0);
                 break;
 
             case "help": // fall-through
+            case "h":
             default:
                 Console.WriteLine("Available Commands: quit, help, episodes, list, pick, play");
                 break;
@@ -108,9 +140,17 @@ internal static class Program
         Console.WriteLine();
     }
 
+    private static void Setup()
+    {
+        GetPodcasts(SubscriptionFile);
+    }
+
     private static void Main()
     {
         Console.Clear();
+
+        SubscriptionFile = utility.DefaultSubscriptionFile;
+        Setup();
 
         DisplayProgramTitle();
 
