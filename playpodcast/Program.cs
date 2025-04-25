@@ -131,6 +131,11 @@ internal static class Program
                 Environment.Exit(0);
                 break;
 
+            case "search":
+            case "se":
+                // TODO:
+                break;
+
             case "stop":
             case "st":
                 if (ThePlayer != null)
@@ -139,20 +144,28 @@ internal static class Program
                 }
                 break;
 
+            case "subscribe":
+            case "su":
+                // TODO:
+                break;
+
             case "help": // fall-through
             case "h":
+            case "?":
             default:
                 // TODO: use a better table formatting solution...
                 List<string> commandList = new()
                 {
-                    "Quit:             'quit'     : 'q'",
-                    "Help:             'help'     : 'h'",
-                    "Clear screen:     'clear'    : 'cl'",
-                    "List episodes:    'episodes' : 'ep'",
-                    "List podcasts:    'list'     : 'li'       | param: {string} 'refresh' : 'r'",
-                    "Select a podcast: 'pick'     : 'pi'       | param: {int} podcast index",
-                    "Stop playback:    'stop'     : 'st'",
-                    "Play an episode:  'play'     : 'pl'       | param: {int} episode index",
+                    "Quit:                  'quit'       : 'q'",
+                    "Help:                  'help'       : 'h' or '?'",
+                    "Clear screen:          'clear'      : 'cl'",
+                    "List episodes:         'episodes'   : 'ep'",
+                    "List podcasts:         'list'       : 'li'       | param: {string} 'refresh' : 'r'",
+                    "Select a podcast:      'pick'       : 'pi'       | param: {int} podcast index",
+                    "Play an episode:       'play'       : 'pl'       | param: {int} episode index",
+                    "Search for a podcast:  'search'     : 'se'       | param: {string} text to search for",
+                    "Stop playback:         'stop'       : 'st'",
+                    "Subscribe to podcast:  'subscribe'  : 'su'       | param: {int} podcast index from search results",
                 };
 
                 Console.WriteLine("Available Commands:");
