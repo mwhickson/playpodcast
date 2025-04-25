@@ -129,7 +129,22 @@ internal static class Program
             case "help": // fall-through
             case "h":
             default:
-                Console.WriteLine("Available Commands: quit, help, episodes, list, pick, play");
+                // TODO: use a better table formatting solution...
+                List<string> commandList = new()
+                {
+                    "Quit:             'quit'     : 'q'",
+                    "Help:             'help'     : 'h'",
+                    "Clear screen:     'clear'    : 'cl'",
+                    "List episodes:    'episodes' : 'ep'",
+                    "List podcasts:    'list'     : 'li'       | param: {string} 'refresh' : 'r'",
+                    "Select a podcast: 'pick'     : 'pi'       | param: {int} podcast index",
+                    "Play an episode:  'play'     : 'pl'       | param: {int} episode index",
+                };
+
+                Console.WriteLine("Available Commands:");
+                commandList.ForEach((string helpItem) => Console.WriteLine(helpItem));
+                Console.WriteLine();
+
                 break;
         }
     }
