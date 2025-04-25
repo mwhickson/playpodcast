@@ -114,11 +114,10 @@ internal static class Program
                 if (options.Count > 0)
                 {
                     int requestedEpisodeIndex = Convert.ToInt32(options.First());
-                    Console.WriteLine(requestedEpisodeIndex);
                     if (requestedEpisodeIndex > 0 && requestedEpisodeIndex <= episodes.Count)
                     {
                         selectedEpisode = episodes[requestedEpisodeIndex - 1];
-                        ThePrompt = string.Format("{0} :: {1}", selectedPodcast.Title, selectedEpisode.Title);
+                        ThePrompt = string.Format("{0} :: {1}", selectedPodcast?.Title, selectedEpisode.Title);
 
                         ThePlayer = new(selectedEpisode.Url);
                         ThePlayer.Play();

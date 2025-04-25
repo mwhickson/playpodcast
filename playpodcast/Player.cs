@@ -6,6 +6,10 @@ public class Player
 {
     private const bool DebugLoggingEnabled = false;
 
+    private const string SecurityDialogTitle = "Insecure site";
+    private const string PrimarySecurityActionText = "View certificate";
+    private const string SecondarySecurityActionText = "Accept 24 hours";
+
     private static LibVLC _vlc = new(DebugLoggingEnabled);
     private static string _FileLocation = "";
     private static Media? _Audio;
@@ -76,27 +80,13 @@ public class Player
 
     private static Task HandleQuestionDialog(Dialog dialog, string? title, string? text, DialogQuestionType questionType, string? cancelText, string? firstActionText, string? secondActionText, CancellationToken token)
     {
-        // DEBUG:
-        // Console.WriteLine();
-        // Console.WriteLine("TITLE: {0}", title);
-        // Console.WriteLine("TEXT: {0}", text);
-        // Console.WriteLine("CANCEL: {0}", cancelText);
-        // Console.WriteLine("ACTION 1: {0}", firstActionText);
-        // Console.WriteLine("ACTION 2: {0}", secondActionText);
-        // Console.WriteLine();
-
-        //
-        // TODO: fix raw text checks
-        // (could just cheat and call PostAction(1) blindly, but would prefer clarity of code and future proofing...)
-        //
-
-        if (title is not "Insecure site" || !token.CanBeCanceled) return Task.CompletedTask;
+        if (title != SecurityDialogTitle || !token.CanBeCanceled) return Task.CompletedTask;
         if (firstActionText == null) return Task.CompletedTask;
 
         switch (firstActionText)
         {
-            case "View certificate":
-            case "Accept 24 hours":
+            case PrimarySecurityActionText:
+            case SecondarySecurityActionText:
                 dialog.PostAction(1);
                 break;
         }
@@ -104,13 +94,17 @@ public class Player
         return Task.CompletedTask;
     }
 
+    // TODO: find out if this should this fire during playback?
     private static Task HandleDisplayProgressDialog(Dialog dialog, string? title, string? text, bool indeterminate, float position, string? cancelText, CancellationToken token)
     {
+        // Console.WriteLine("PROGRESS: {0} - {1}", indeterminate ? "?" : "*", position.ToString());
         return Task.CompletedTask;
     }
 
+    // TODO: find out if this should this fire during playback?
     private static Task HandleUpdateProgressDialog(Dialog dialog, float position, string? text)
     {
+        // Console.WriteLine("PROGRESS-UPDATE: {0}", position.ToString());
         return Task.CompletedTask;
     }
 }
