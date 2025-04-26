@@ -2,7 +2,15 @@ namespace playpodcast;
 
 internal static class Program
 {
+    private static string ApplicationTitle = "playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
+
     private static Utility utility = new();
+    private static Cli _cli = new(new CliTheme(
+        new CliTheme.ColorPair(ConsoleColor.DarkBlue, ConsoleColor.White),
+        new CliTheme.ColorPair(ConsoleColor.Red, ConsoleColor.White),
+        new CliTheme.ColorPair(ConsoleColor.DarkBlue, ConsoleColor.Yellow),
+        new CliTheme.ColorPair(ConsoleColor.Yellow, ConsoleColor.Black)
+    ));
 
     private static string SubscriptionFile = "";
 
@@ -14,218 +22,172 @@ internal static class Program
 
     private static Player? ThePlayer;
 
-    private static string DefaultPrompt = "enter command";
-    private static string ThePrompt = DefaultPrompt;
-
-    private static string ReadPrompt()
+    private static void Main()
     {
-        Console.WriteLine();
-        Console.WriteLine("[{0}]", ThePrompt);
-        Console.Write("> ");
+        Setup();
 
-        string? input = Console.ReadLine();
+        DisplayProgramTitle();
 
-        return input ?? "";
+        _cli.Run();
+        Cli.RestoreState();
     }
+
+    private static Task<CliActionResult> QuitApplication(List<string> Options) {
+        Environment.Exit(0);
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> DisplayHelp(List<string> Options) {
+        if (CliActions != null) {
+            CliActions.ForEach((a) => Console.WriteLine("{0} | {1} | {2}", a.Name, a.Description, string.Join(", ", a.Commands)));
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> ChoosePodcast(List<string> Options) {
+        if (Options.Count > 0)
+        {
+            int requestedPodcastIndex = Convert.ToInt32(Options.First());
+            if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
+            {
+                selectedPodcast = podcasts[requestedPodcastIndex - 1];
+                _cli.ThePrompt = selectedPodcast.Title;
+            }
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> ClearScreen(List<string> Options) {
+        Console.Clear();
+        DisplayProgramTitle();
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> ListEpisodes(List<string> Options) {
+        if (selectedPodcast != null)
+        {
+            episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
+
+            if (episodes.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Episode List [{0}]:", selectedPodcast.Title);
+                Console.WriteLine();
+
+                episodes.ForEach((e) => Console.WriteLine("{0}. {1}", e.SortKey, e.Title));
+            }
+            else
+            {
+                Console.WriteLine("No episodes found!");
+            }
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> ListPodcasts(List<string> Options) {
+        if (Options.Count > 0)
+        {
+            string listOptions = Options.First().ToString();
+
+            switch (listOptions.ToLower())
+            {
+                case "refresh":
+                case "r":
+                    GetPodcasts(SubscriptionFile);
+                    Console.WriteLine("Subscriptions reloaded.");
+                    break;
+                default:
+                    // PASS:
+                    break;
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("Subscription List [{0}]:", SubscriptionFile);
+        Console.WriteLine();
+
+        int podcastIndex = 0;
+        podcasts.ForEach((p) =>
+        {
+            podcastIndex++;
+            Console.WriteLine("{0}. {1}", podcastIndex, p.Title);
+        });
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> PlayEpisode(List<string> Options) {
+        if (Options.Count > 0)
+        {
+            int requestedEpisodeIndex = Convert.ToInt32(Options.First());
+            if (requestedEpisodeIndex > 0 && requestedEpisodeIndex <= episodes.Count)
+            {
+                selectedEpisode = episodes[requestedEpisodeIndex - 1];
+                _cli.ThePrompt = string.Format("{0} :: {1}", selectedPodcast?.Title, selectedEpisode.Title);
+
+                ThePlayer = new(selectedEpisode.Url);
+                ThePlayer.Play();
+            }
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static Task<CliActionResult> StopPlayback(List<string> Options) {
+        if (ThePlayer != null)
+        {
+            ThePlayer.Stop();
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
+    private static List<CliAction> CliActions = [
+        new CliAction("Quit", "Quit playpodcast", ["quit", "q"], QuitApplication),
+        new CliAction("Help", "Display help", [ "help", "h", "?" ], DisplayHelp),
+        new CliAction("Choose", "Choose a podcast", [ "choose", "c", "*" ], ChoosePodcast),
+        new CliAction("Clear", "Clear the screen", [ "clear", "z" ], ClearScreen),
+        new CliAction("Episodes", "List episodes", [ "episodes", "e" ], ListEpisodes),
+        new CliAction("History", "View listening history", [ "history", "v" ], CliAction.DefaultSuccessFunction),
+        new CliAction("Information", "Show podcast/episode information", [ "info", "i" ], CliAction.DefaultSuccessFunction),
+        new CliAction("Podcasts", "List podcasts", [ "list", "l" ], ListPodcasts),
+        new CliAction("Play", "Play an episode", [ "play", "p" ], PlayEpisode),
+        new CliAction("Search", "Search for a podcast", [ "search", "s", "/" ], CliAction.DefaultSuccessFunction),
+        new CliAction("Stop", "Stop playback", [ "stop", "x" ], StopPlayback),
+        new CliAction("Subscribe", "Subscribe to podcast", [ "subscribe", "+" ], CliAction.DefaultSuccessFunction),
+        new CliAction("Unsubscribe", "Unsubscribe from podcast", [ "unsubscribe", "-" ], CliAction.DefaultSuccessFunction),
+    ];
 
     private static void GetPodcasts(string subscriptionFile)
     {
         podcasts = Utility.LoadPodcastsFromFile(subscriptionFile);
     }
 
-    private static void ProcessCommand(string command, List<string> options)
-    {
-        switch (command.ToLower())
-        {
-            case "choose":
-            case "c":
-            case "*":
-                if (options.Count > 0)
-                {
-                    int requestedPodcastIndex = Convert.ToInt32(options.First());
-                    if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
-                    {
-                        selectedPodcast = podcasts[requestedPodcastIndex - 1];
-                        ThePrompt = selectedPodcast.Title;
-                    }
-                }
-                break;
-
-            case "clear":
-            case "z":
-                Console.Clear();
-                DisplayProgramTitle();
-                break;
-
-            case "episodes":
-            case "e":
-                if (selectedPodcast != null)
-                {
-                    episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
-
-                    if (episodes.Count > 0)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("Episode List [{0}]:", selectedPodcast.Title);
-                        Console.WriteLine();
-
-                        episodes.ForEach((e) => Console.WriteLine("{0}. {1}", e.SortKey, e.Title));
-                    }
-                    else
-                    {
-                        Console.WriteLine("No episodes found!");
-                    }
-                }
-                break;
-
-            case "history":
-            case "v":
-                // TODO:
-                break;
-
-            case "info":
-            case "i":
-                // TODO:
-                break;
-
-            case "list":
-            case "l":
-                if (options.Count > 0)
-                {
-                    string listOptions = options.First().ToString();
-
-                    switch (listOptions.ToLower())
-                    {
-                        case "refresh":
-                        case "r":
-                            GetPodcasts(SubscriptionFile);
-                            Console.WriteLine("Subscriptions reloaded.");
-                            break;
-                        default:
-                            // PASS:
-                            break;
-                    }
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("Subscription List [{0}]:", SubscriptionFile);
-                Console.WriteLine();
-
-                int podcastIndex = 0;
-                podcasts.ForEach((p) =>
-                {
-                    podcastIndex++;
-                    Console.WriteLine("{0}. {1}", podcastIndex, p.Title);
-                });
-
-                break;
-
-            case "play":
-            case "p":
-                if (options.Count > 0)
-                {
-                    int requestedEpisodeIndex = Convert.ToInt32(options.First());
-                    if (requestedEpisodeIndex > 0 && requestedEpisodeIndex <= episodes.Count)
-                    {
-                        selectedEpisode = episodes[requestedEpisodeIndex - 1];
-                        ThePrompt = string.Format("{0} :: {1}", selectedPodcast?.Title, selectedEpisode.Title);
-
-                        ThePlayer = new(selectedEpisode.Url);
-                        ThePlayer.Play();
-                    }
-                }
-
-                break;
-
-            case "quit":
-            case "q":
-                Environment.Exit(0);
-                break;
-
-            case "search":
-            case "s":
-            case "/":
-                // TODO:
-                break;
-
-            case "stop":
-            case "x":
-                if (ThePlayer != null)
-                {
-                    ThePlayer.Stop();
-                }
-                break;
-
-            case "subscribe":
-            case "+":
-                // TODO:
-                break;
-
-            case "unsubscribe":
-            case "u":
-            case "-":
-                // TODO:
-                break;
-
-            case "help": // fall-through
-            case "h":
-            case "?":
-            default:
-                // TODO: use a better table formatting solution...
-                List<string> commandList = new()
-                {
-                    "Quit:                      'quit'         : 'q'",
-                    "Help:                      'help'         : '?' or 'h'",
-                    "Choose a podcast:          'choose'       : '*' or 'c'  | param: {int} podcast index",
-                    "Clear screen:              'clear'        : 'z'",
-                    "List episodes:             'episodes'     : 'e'",
-                    "Show listening history:    'history'      : 'v'",
-                    "Show podcast/episode info: 'info'         : 'i'",
-                    "List podcasts:             'list'         : 'l'         | param: {string} 'refresh' : 'r'",
-                    "Play an episode:           'play'         : 'p'         | param: {int} episode index",
-                    "Search for a podcast:      'search'       : '/' or 's'  | param: {string} text to search for",
-                    "Stop playback:             'stop'         : 'x'",
-                    "Subscribe to podcast:      'subscribe'    : '+'         | param: {int} podcast index from search results",
-                    "Unsubscribe from podcast:  'unsubscribe'  : '-' or 'u'  | param: {int} podcast index",
-                };
-
-                Console.WriteLine("Available Commands:");
-                commandList.ForEach((string helpItem) => Console.WriteLine(helpItem));
-                Console.WriteLine();
-
-                break;
-        }
-    }
-
     private static void DisplayProgramTitle()
     {
-        Console.WriteLine("playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git");
+        Console.WriteLine(ApplicationTitle);
     }
 
     private static void Setup()
     {
-        ThePrompt = DefaultPrompt;
-        GetPodcasts(SubscriptionFile);
-    }
-
-    private static void Main()
-    {
-        Console.Clear();
-
         SubscriptionFile = utility.DefaultSubscriptionFile;
-        Setup();
+        GetPodcasts(SubscriptionFile);
+        
+        CliActions.ForEach((a) => Cli.RegisterCommandHandler(a));
 
-        DisplayProgramTitle();
-
-        while (true)
-        {
-            string input = ReadPrompt();
-
-            List<string> parts = new(input.Split(" "));
-            string command = parts.Count > 0 ? parts[0] : "";
-            List<string> options = parts.Count > 1 ? new(parts.Skip(1)) : [];
-
-            ProcessCommand(command, options);
-        }
+        Console.Clear(); // prime the pump to ensure our background covers the entire screen
     }
 }
