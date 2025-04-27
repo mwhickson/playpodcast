@@ -122,7 +122,7 @@ public class Utility
 
                             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(episodeUrl)) continue;
 
-                            Episode e = new Episode(title.Trim(), episodeUrl.Trim(), sortKey);
+                            Episode e = new Episode(title.Trim(), episodeUrl.Trim());
                             episodes.Add(e);
                         }
                     }
@@ -131,6 +131,13 @@ public class Utility
         }
 
         return episodes;
+    }
+
+    public static bool StoreEpisodes(DataStore store, Podcast podcast, List<Episode> episodes)
+    {
+        bool success = true;
+        episodes.ForEach((e) => success = success && store.Episodes.InsertOrUpdate(podcast, e));
+        return success;
     }
 
     public static XmlReaderSettings GetFeedParserSettings()

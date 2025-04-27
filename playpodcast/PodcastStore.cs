@@ -160,10 +160,14 @@ public class PodcastStore
             {
                 while (reader.Read())
                 {
-                    podcasts.Add(new Podcast(
+                    Podcast p = new(
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
-                    ));
+                    );
+
+                    p.Id = reader.GetInt32(reader.GetOrdinal("id"));
+
+                    podcasts.Add(p);
                 }
             }
 
@@ -187,7 +191,7 @@ public class PodcastStore
             // TODO:
             command.Parameters.AddWithValue("$description", "");
             command.Parameters.AddWithValue("$subscribed_on", DateTime.Now);
-            command.Parameters.AddWithValue("$updated_on", DateTime.MinValue);
+            command.Parameters.AddWithValue("$updated_on", podcast.UpdatedOn);
 
             int affected = command.ExecuteNonQuery();
 

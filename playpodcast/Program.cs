@@ -13,7 +13,7 @@ internal static class Program
         new CliTheme.ColorPair(ConsoleColor.Yellow, ConsoleColor.Black)
     ));
 
-    private static DataStore db = new DataStore(utility.DefaultStoreFile);
+    private static DataStore db = new(utility.DefaultStoreFile);
 
     private static string SubscriptionFile = "";
 
@@ -58,6 +58,16 @@ internal static class Program
             if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
             {
                 selectedPodcast = podcasts[requestedPodcastIndex - 1];
+
+                Console.WriteLine("retrieving episodes for [{0}]...", selectedPodcast.Title);
+
+                List<Episode> podcastEpisodes = Utility.GetEpisodesFromFeed(selectedPodcast);
+                podcastEpisodes.ForEach((e) => db.Episodes.InsertOrUpdate(selectedPodcast, e));
+                episodes = db.Episodes.GetListByPodcastId(selectedPodcast.Id);
+
+                selectedPodcast.UpdatedOn = DateTime.Now;
+                db.Podcasts.InsertOrUpdate(selectedPodcast);
+
                 _cli.ThePrompt = selectedPodcast.Title;
             }
         }
@@ -77,7 +87,7 @@ internal static class Program
     private static Task<CliActionResult> ListEpisodes(List<string> Options) {
         if (selectedPodcast != null)
         {
-            episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
+            // episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
 
             if (episodes.Count > 0)
             {
@@ -85,7 +95,7 @@ internal static class Program
                 Console.WriteLine("Episode List [{0}]:", selectedPodcast.Title);
                 Console.WriteLine();
 
-                episodes.ForEach((e) => Console.WriteLine("{0}. {1}", e.SortKey, e.Title));
+                episodes.ForEach((e) => Console.WriteLine("{0} >>> {1}", e.Id, e.Title));
             }
             else
             {
@@ -98,34 +108,11 @@ internal static class Program
     }
 
     private static Task<CliActionResult> ListPodcasts(List<string> Options) {
-        // TODO: what options do we want?
-        // if (Options.Count > 0)
-        // {
-        //     string listOptions = Options.First().ToString();
-
-        //     switch (listOptions.ToLower())
-        //     {
-        //         case "refresh":
-        //         case "r":
-        //             GetPodcasts(SubscriptionFile);
-        //             Console.WriteLine("Subscriptions reloaded.");
-        //             break;
-        //         default:
-        //             // PASS:
-        //             break;
-        //     }
-        // }
-
         Console.WriteLine();
         Console.WriteLine("Subscription List:");
         Console.WriteLine();
 
-        int podcastIndex = 0;
-        podcasts.ForEach((p) =>
-        {
-            podcastIndex++;
-            Console.WriteLine("{0}. {1}", podcastIndex, p.Title);
-        });
+        podcasts.ForEach((p) => Console.WriteLine("{0} >> {1}", p.Id, p.Title));
 
         CliActionResult result = new(CliActionResult.Result.Success, []);
         return Task.Run(() => result);

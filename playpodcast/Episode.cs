@@ -2,14 +2,13 @@ namespace playpodcast;
 
 public class Episode
 {
-    public string Title { get; set; }
+    public int Id { get; set; } = 0;
+    public string Title { get; set; } = "";
     public string Url { get; }
-    public string SortKey { get; }
 
-    public Episode(string title, string url, string sortKey)
+    public Episode(string title, string url)
     {
         Title = title;
         Url = url;
-        SortKey = sortKey;
     }
 }
