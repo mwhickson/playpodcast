@@ -31,40 +31,48 @@ public class Player
     public void PlayFileLocation(string? fileLocation = null)
     {
         _FileLocation = fileLocation ?? _FileLocation;
-        Play();
+        PlayPause();
     }
 
-    public void Play()
+    public void PlayPause()
     {
-        if (!string.IsNullOrWhiteSpace(_FileLocation))
+        if (_Player != null)
         {
-            Uri url = new(_FileLocation);
-
-            if (url.IsWellFormedOriginalString())
+            if (_Player.IsPlaying)
             {
-                _Audio = new(_vlc, url);
-                _Player = new(_Audio);
+                _Player.Pause();
+            }
+            else
+            {
                 _Player.Play();
             }
         }
-    }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(_FileLocation))
+            {
+                Uri url = new(_FileLocation);
 
-    public void Pause()
-    {
-        _Player?.Pause();
+                if (url.IsWellFormedOriginalString())
+                {
+                    _Audio = new(_vlc, url);
+                    _Player = new(_Audio);
+                    _Player.Play();
+                }
+            }
+        }
     }
 
     public void Stop()
     {
         _Player?.Stop();
+        _Player?.Dispose();
+        _Audio?.Dispose();
     }
 
     private void CleanUp()
     {
         Stop();
-
-        _Player?.Dispose();
-        _Audio?.Dispose();
         _vlc.Dispose();
     }
 

@@ -32,9 +32,11 @@ Welcome to `playpodcast`!
 
 ## Tools
 
+- libuiohook : https://github.com/TolikPylypchuk/libuiohook
 - LibVLCSharp : https://github.com/videolan/libvlcsharp
-- Microsoft.Data.Sqlite: https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/?tabs=net-cli
-- sqlite: https://www.sqlite.org/
+- Microsoft.Data.Sqlite : https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/?tabs=net-cli
+- SharpHook : https://github.com/TolikPylypchuk/SharpHook
+- sqlite : https://www.sqlite.org/
 - iTunes Search API : https://performance-partners.apple.com/search-api
 - XML, RSS, OPML
 

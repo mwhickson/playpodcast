@@ -1,3 +1,5 @@
+using SharpHook;
+
 namespace playpodcast;
 
 internal static class Program
@@ -5,6 +7,8 @@ internal static class Program
     private static string ApplicationTitle = "playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
 
     private static int MaximumEpisodeCount = 15; // TODO: move to config; disregard if searching is being performed
+
+    private static TaskPoolGlobalHook hook = new();
 
     private static Utility utility = new();
 
@@ -131,7 +135,7 @@ internal static class Program
     private static Task<CliActionResult> PausePlayback(List<string> Options) {
         if (ThePlayer != null)
         {
-            ThePlayer.Pause();
+            ThePlayer.PlayPause();
         }
 
         CliActionResult result = new(CliActionResult.Result.Success, []);
@@ -150,7 +154,14 @@ internal static class Program
                 _cli.ThePrompt = string.Format("{0} :: {1}", selectedPodcast?.Title, selectedEpisode.Title);
 
                 ThePlayer = new(selectedEpisode.Url);
-                ThePlayer.Play();
+                ThePlayer.PlayPause();
+            }
+        }
+        else
+        {
+            if (selectedEpisode != null && ThePlayer != null)
+            {
+                ThePlayer.PlayPause();
             }
         }
 
@@ -211,8 +222,25 @@ internal static class Program
         Console.WriteLine(ApplicationTitle);
     }
 
+    private static void OnKeyReleased(object? sender, KeyboardHookEventArgs e)
+    {
+        switch(e.Data.KeyCode)
+        {
+            case SharpHook.Native.KeyCode.VcPause:
+            case SharpHook.Native.KeyCode.VcMediaPlay:
+                if (ThePlayer != null)
+                {
+                    ThePlayer.PlayPause();
+                }
+                break;
+        }
+    }
+
     private static void Setup()
     {
+        hook.KeyReleased += OnKeyReleased;
+        hook.RunAsync();
+
         SubscriptionFile = utility.DefaultSubscriptionFile;
         GetPodcasts(SubscriptionFile);
 
