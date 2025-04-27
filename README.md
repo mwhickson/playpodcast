@@ -24,11 +24,11 @@ Welcome to `playpodcast`!
 - iTunes search
 - OPML import/export
 - streaming playback
-- view podcast and episode detail
 
 ### Maybe...
 - downloads for offline listening
 - subscription management
+- view podcast and episode detail
 
 ## Tools
 

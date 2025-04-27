@@ -11,10 +11,10 @@ public class PodcastStore
     private const string SQL_GET_BY_URL = "SELECT * FROM podcast WHERE url = $url LIMIT 1";
     private const string SQL_GET_LIST = "SELECT * FROM podcast ORDER BY title, id";
     private const string SQL_UPSERT = @"
-        INSERT INTO podcast(id, title, url, description, subscribed_on, updated_on)
-        VALUES (null, $title, $url, $description, $subscribed_on, $updated_on)
+        INSERT INTO podcast(id, title, url, subscribed_on, updated_on)
+        VALUES (null, $title, $url, $subscribed_on, $updated_on)
             ON CONFLICT(url)
-            DO UPDATE SET title = excluded.title, description = excluded.description, updated_on = excluded.updated_on WHERE url = excluded.url
+            DO UPDATE SET title = excluded.title, updated_on = excluded.updated_on WHERE url = excluded.url
     ";
 
     public DataStore RootStore { get; }
@@ -111,7 +111,6 @@ public class PodcastStore
                     );
 
                     podcast.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    podcast.Description = reader.GetString(reader.GetOrdinal("description"));
                     podcast.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
                     podcast.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
                 }
@@ -144,7 +143,6 @@ public class PodcastStore
                     );
 
                     podcast.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    podcast.Description = reader.GetString(reader.GetOrdinal("description"));
                     podcast.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
                     podcast.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
                 }
@@ -176,7 +174,6 @@ public class PodcastStore
                     );
 
                     p.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    p.Description = reader.GetString(reader.GetOrdinal("description"));
                     p.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
                     p.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
 
@@ -200,7 +197,6 @@ public class PodcastStore
             command.CommandText = SQL_UPSERT;
             command.Parameters.AddWithValue("$title", podcast.Title);
             command.Parameters.AddWithValue("$url", podcast.Url);
-            command.Parameters.AddWithValue("$description", podcast.Description);
             command.Parameters.AddWithValue("$subscribed_on", DateTime.Now);
             command.Parameters.AddWithValue("$updated_on", podcast.UpdatedOn);
 

@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS episode (
 	podcast_id INTEGER NOT NULL,
 	title NVARCHAR(1000) NULL,
 	url NVARCHAR(2000) NOT NULL,
-	description NVARCHAR(4000) NULL,
 	published_on DATETIME NOT NULL,
 	is_played BIT NOT NULL DEFAULT 0,
 	position INTEGER NULL,

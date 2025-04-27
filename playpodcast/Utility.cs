@@ -100,7 +100,6 @@ public class Utility
 
                             string title = "";
                             string episodeUrl = "";
-                            string description = "";
                             DateTime pubDate = DateTime.MinValue;
                             string sortKey = episodeOrder.ToString(); // NOTE: date would be better here, but the order in the feed is probably safe... (maybe even more reliable)
 
@@ -122,11 +121,6 @@ public class Utility
                                         }
                                     }
 
-                                    if (itemReader.Name == "description")
-                                    {
-                                        description = itemReader.ReadInnerXml(); // TOOD: fix any CDATA/HTML stuff...
-                                    }
-
                                     if (itemReader.Name == "pubDate")
                                     {
                                         pubDate = DateTime.Parse(itemReader.ReadInnerXml());
@@ -143,7 +137,6 @@ public class Utility
 
                             Episode e = new(p.Id, title.Trim(), episodeUrl.Trim());
 
-                            e.Description = description;
                             e.PublishedOn = pubDate;
 
                             episodes.Add(e);

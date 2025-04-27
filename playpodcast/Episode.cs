@@ -6,7 +6,6 @@ public class Episode
     public int PodcastId { get; }
     public string Title { get; set; }
     public string Url { get; }
-    public string Description { get; set; }
     public DateTime PublishedOn { get; set; }
     public bool IsPlayed { get; set; }
     public int Position { get; set; }
@@ -17,7 +16,6 @@ public class Episode
         PodcastId = podcastId;
         Title = title;
         Url = url;
-        Description = "";
         PublishedOn = DateTime.MinValue;
         IsPlayed = false;
         Position = 0;

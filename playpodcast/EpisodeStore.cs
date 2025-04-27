@@ -12,10 +12,10 @@ public class EpisodeStore
     private const string SQL_GET_BY_URL = "SELECT * FROM episode WHERE url = $url LIMIT 1";
     private const string SQL_GET_LIST_BY_PODCAST_ID = "SELECT * FROM episode WHERE podcast_id = $podcast_id ORDER BY published_on DESC, id DESC, title";
     private const string SQL_UPSERT = @"
-        INSERT INTO episode(id, podcast_id, title, url, description, published_on, is_played, position)
-        VALUES (null, $podcast_id, $title, $url, $description, $published_on, $is_played, $position)
+        INSERT INTO episode(id, podcast_id, title, url, published_on, is_played, position)
+        VALUES (null, $podcast_id, $title, $url, $published_on, $is_played, $position)
             ON CONFLICT(url)
-            DO UPDATE SET podcast_id = excluded.podcast_id, title = excluded.title, description = excluded.description, published_on = excluded.published_on, is_played = excluded.is_played, position = excluded.position WHERE url = excluded.url
+            DO UPDATE SET podcast_id = excluded.podcast_id, title = excluded.title, published_on = excluded.published_on, is_played = excluded.is_played, position = excluded.position WHERE url = excluded.url
     ";
 
     public DataStore RootStore { get; }
@@ -132,7 +132,6 @@ public class EpisodeStore
                     );
 
                     episode.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    episode.Description = reader.GetString(reader.GetOrdinal("description"));
                     episode.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
                     episode.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
                     episode.Position = reader.GetInt32(reader.GetOrdinal("position"));
@@ -167,7 +166,6 @@ public class EpisodeStore
                     );
 
                     episode.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    episode.Description = reader.GetString(reader.GetOrdinal("description"));
                     episode.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
                     episode.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
                     episode.Position = reader.GetInt32(reader.GetOrdinal("position"));
@@ -202,7 +200,6 @@ public class EpisodeStore
                     );
 
                     e.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    e.Description = reader.GetString(reader.GetOrdinal("description"));
                     e.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
                     e.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
                     e.Position = reader.GetInt32(reader.GetOrdinal("position"));
@@ -228,7 +225,6 @@ public class EpisodeStore
             command.Parameters.AddWithValue("$podcast_id", podcast.Id);
             command.Parameters.AddWithValue("$title", episode.Title);
             command.Parameters.AddWithValue("$url", episode.Url);
-            command.Parameters.AddWithValue("$description", episode.Description);
             command.Parameters.AddWithValue("$published_on", episode.PublishedOn);
             command.Parameters.AddWithValue("$is_played", episode.IsPlayed);
             command.Parameters.AddWithValue("$position", episode.Position);

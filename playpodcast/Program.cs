@@ -4,7 +4,7 @@ namespace playpodcast;
 
 internal static class Program
 {
-    private static string ApplicationTitle = "playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
+    private static string ApplicationTitle = "playpodcast v0.5 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
 
     private static int MaximumEpisodeCount = 15; // TODO: move to config; disregard if searching is being performed
 
