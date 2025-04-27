@@ -5,12 +5,15 @@ internal static class Program
     private static string ApplicationTitle = "playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
 
     private static Utility utility = new();
+
     private static Cli _cli = new(new CliTheme(
         new CliTheme.ColorPair(ConsoleColor.DarkBlue, ConsoleColor.White),
         new CliTheme.ColorPair(ConsoleColor.Red, ConsoleColor.White),
         new CliTheme.ColorPair(ConsoleColor.DarkBlue, ConsoleColor.Yellow),
         new CliTheme.ColorPair(ConsoleColor.Yellow, ConsoleColor.Black)
     ));
+
+    private static DataStore db = new DataStore(utility.DefaultStoreFile);
 
     private static string SubscriptionFile = "";
 
@@ -185,6 +188,8 @@ internal static class Program
     {
         SubscriptionFile = utility.DefaultSubscriptionFile;
         GetPodcasts(SubscriptionFile);
+
+        bool storeIsValid = db.ValidateStore();
         
         CliActions.ForEach((a) => Cli.RegisterCommandHandler(a));
 

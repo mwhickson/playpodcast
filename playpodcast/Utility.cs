@@ -4,15 +4,23 @@ namespace playpodcast;
 
 public class Utility
 {
+    public static string DefaultStoreFilename = "playpodcast.db";
     public const string DefaultSubscriptionFilename = "subscriptions.opml";
     private const string ApplicationFolder = "playpodcast";
     private const string UserAgent = "Mozilla/9.9 (github.com/mwhickson/playpodcast) Chrome/999.9.9.9 Gecko/99990101 Firefox/999 Safari/999.9";
 
     private string UserFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    
     public string DefaultSubscriptionFolder
     {
         get { return System.IO.Path.Join(UserFolder, ApplicationFolder); }
     }
+
+    public string DefaultStoreFile
+    {
+        get { return System.IO.Path.Join(DefaultSubscriptionFolder, DefaultStoreFilename); }
+    }
+
     public string DefaultSubscriptionFile
     {
         get { return System.IO.Path.Join(DefaultSubscriptionFolder, DefaultSubscriptionFilename); }

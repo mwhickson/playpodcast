@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS episode (
+	id INTEGER NOT NULL,
+	podcast_id INTEGER NOT NULL,
+	title NVARCHAR(1000) NULL,
+	url NVARCHAR(2000) NOT NULL,
+	description NVARCHAR(4000) NULL,
+	published_on DATETIME NOT NULL,
+	is_played BIT NOT NULL DEFAULT 0,
+	position INTEGER NULL,
+    PRIMARY KEY (id AUTOINCREMENT),
+	FOREIGN KEY (podcast_id) REFERENCES podcast(id)
+)
