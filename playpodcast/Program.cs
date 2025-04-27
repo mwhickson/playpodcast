@@ -44,7 +44,10 @@ internal static class Program
 
     private static Task<CliActionResult> DisplayHelp(List<string> Options) {
         if (CliActions != null) {
-            CliActions.ForEach((a) => Console.WriteLine("{0} | {1} | {2}", a.Name, a.Description, string.Join(", ", a.Commands)));
+            Console.WriteLine();
+            Console.WriteLine("{0} | {1} | {2}", "NAME".PadRight(20), "DESCRIPTION".PadRight(40), "COMMANDS");
+            Console.WriteLine("{0} | {1} | {2}", new String('-' ,20), new String('-', 40), new String('-', 30));
+            CliActions.ForEach((a) => Console.WriteLine("{0} | {1} | {2}", a.Name.PadRight(20), a.Description.PadRight(40), string.Join("; ", a.Commands)));
         }
 
         CliActionResult result = new(CliActionResult.Result.Success, []);
@@ -58,11 +61,15 @@ internal static class Program
             if (requestedPodcastIndex > 0 && requestedPodcastIndex <= podcasts.Count)
             {
                 selectedPodcast = podcasts[requestedPodcastIndex - 1];
+                
+                if (DateTime.Compare(DateTime.Now.Date, selectedPodcast.UpdatedOn.Date) > 0)
+                {
+                    Console.WriteLine("retrieving episodes for [{0}]...", selectedPodcast.Title);
 
-                Console.WriteLine("retrieving episodes for [{0}]...", selectedPodcast.Title);
+                    List<Episode> podcastEpisodes = Utility.GetEpisodesFromFeed(selectedPodcast);
+                    podcastEpisodes.ForEach((e) => db.Episodes.InsertOrUpdate(selectedPodcast, e));
+                }
 
-                List<Episode> podcastEpisodes = Utility.GetEpisodesFromFeed(selectedPodcast);
-                podcastEpisodes.ForEach((e) => db.Episodes.InsertOrUpdate(selectedPodcast, e));
                 episodes = db.Episodes.GetListByPodcastId(selectedPodcast.Id);
 
                 selectedPodcast.UpdatedOn = DateTime.Now;
@@ -87,15 +94,12 @@ internal static class Program
     private static Task<CliActionResult> ListEpisodes(List<string> Options) {
         if (selectedPodcast != null)
         {
-            // episodes = Utility.GetEpisodesFromFeed(selectedPodcast);
-
             if (episodes.Count > 0)
             {
                 Console.WriteLine();
-                Console.WriteLine("Episode List [{0}]:", selectedPodcast.Title);
-                Console.WriteLine();
-
-                episodes.ForEach((e) => Console.WriteLine("{0} | {1} | {2}", e.Id, e.PublishedOn.ToShortDateString(), e.Title));
+                Console.WriteLine("{0} | {1} | {2}", "ID".PadRight(10), "PUBLISHED".PadRight(12), "TITLE");
+                Console.WriteLine("{0} | {1} | {2}", new String('-' ,10), new String('-', 12), new String('-', 50));
+                episodes.ForEach((e) => Console.WriteLine("{0} | {1} | {2}", e.Id.ToString().PadRight(10), e.PublishedOn.ToShortDateString().PadRight(12), e.Title));
             }
             else
             {
@@ -109,10 +113,9 @@ internal static class Program
 
     private static Task<CliActionResult> ListPodcasts(List<string> Options) {
         Console.WriteLine();
-        Console.WriteLine("Subscription List:");
-        Console.WriteLine();
-
-        podcasts.ForEach((p) => Console.WriteLine("{0} >> {1}", p.Id, p.Title));
+        Console.WriteLine("{0} | {1} | {2}", "ID".PadRight(10), "UPDATED ON".PadRight(12), "TITLE");
+        Console.WriteLine("{0} | {1} | {2}", new String('-' ,10), new String('-', 12), new String('-', 50));
+        podcasts.ForEach((p) => Console.WriteLine("{0} | {1} | {2}", p.Id.ToString().PadRight(10), (DateTime.Compare(DateTime.MinValue, p.UpdatedOn) == 0 ? "" : p.UpdatedOn.ToShortDateString()).PadRight(12), p.Title));
 
         CliActionResult result = new(CliActionResult.Result.Success, []);
         return Task.Run(() => result);
@@ -164,9 +167,23 @@ internal static class Program
 
     private static void GetPodcasts(string subscriptionFile)
     {
-        List<Podcast> podcastsFromFile = Utility.LoadPodcastsFromFile(subscriptionFile);
-        Utility.StorePodcasts(db, podcastsFromFile);
         podcasts = db.Podcasts.GetList();
+
+        List<string> knownUrls = new();
+        podcasts.ForEach((p) => knownUrls.Add(p.Url));
+
+        // only persist new entries (and later remove items no longer subscribed to...)
+        // otherwise, program startup wipes things that don't come from the OPML (e.g. UpdatedOn, etc.)
+        List<Podcast> podcastsFromFile = Utility.LoadPodcastsFromFile(subscriptionFile);
+
+        podcastsFromFile.ForEach((p) => {
+            if (!knownUrls.Contains(p.Url))
+            {
+                podcasts.Add(p);
+            }
+        });
+
+        Utility.StorePodcasts(db, podcasts);
     }
 
     private static void DisplayProgramTitle()
