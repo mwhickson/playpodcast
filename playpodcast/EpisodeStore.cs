@@ -8,8 +8,8 @@ public class EpisodeStore
     private const string SQL_DELETE_BY_ID = "DELETE FROM episode WHERE id = $id";
     private const string SQL_DELETE_BY_PODCAST_ID = "DELETE FROM episode WHERE podcast_id = $podcast_id";
     private const string SQL_DELETE_BY_URL = "DELETE FROM episode WHERE url = $url";
-    private const string SQL_GET_BY_ID = "SELECT TOP 1 * FROM episode WHERE id = $id";
-    private const string SQL_GET_BY_URL = "SELECT TOP 1 * FROM episode WHERE url = $url";
+    private const string SQL_GET_BY_ID = "SELECT * FROM episode WHERE id = $id LIMIT 1";
+    private const string SQL_GET_BY_URL = "SELECT * FROM episode WHERE url = $url LIMIT 1";
     private const string SQL_GET_LIST_BY_PODCAST_ID = "SELECT * FROM episode WHERE podcast_id = $podcast_id ORDER BY published_on DESC, id DESC, title";
     private const string SQL_UPSERT = @"
         INSERT INTO episode(id, podcast_id, title, url, description, published_on, is_played, position)

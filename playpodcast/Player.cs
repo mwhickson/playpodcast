@@ -49,6 +49,11 @@ public class Player
         }
     }
 
+    public void Pause()
+    {
+        _Player?.Pause();
+    }
+
     public void Stop()
     {
         _Player?.Stop();

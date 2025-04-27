@@ -7,8 +7,8 @@ public class PodcastStore
     private const string SQL_SANITY_CHECK = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'podcast'";
     private const string SQL_DELETE_BY_ID = "DELETE FROM podcast WHERE id = $id";
     private const string SQL_DELETE_BY_URL = "DELETE FROM podcast WHERE url = $url";
-    private const string SQL_GET_BY_ID = "SELECT TOP 1 * FROM podcast WHERE id = $id";
-    private const string SQL_GET_BY_URL = "SELECT TOP 1 * FROM podcast WHERE url = $url";
+    private const string SQL_GET_BY_ID = "SELECT * FROM podcast WHERE id = $id LIMIT 1";
+    private const string SQL_GET_BY_URL = "SELECT * FROM podcast WHERE url = $url LIMIT 1";
     private const string SQL_GET_LIST = "SELECT * FROM podcast ORDER BY title, id";
     private const string SQL_UPSERT = @"
         INSERT INTO podcast(id, title, url, description, subscribed_on, updated_on)

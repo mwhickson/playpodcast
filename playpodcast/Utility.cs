@@ -4,6 +4,7 @@ namespace playpodcast;
 
 public class Utility
 {
+    public static string DefaultLogFilename = "playpodcast.log";
     public static string DefaultStoreFilename = "playpodcast.db";
     public const string DefaultSubscriptionFilename = "subscriptions.opml";
     private const string ApplicationFolder = "playpodcast";
@@ -14,6 +15,11 @@ public class Utility
     public string DefaultSubscriptionFolder
     {
         get { return System.IO.Path.Join(UserFolder, ApplicationFolder); }
+    }
+
+    public string DefaultLogFile
+    {
+        get { return System.IO.Path.Join(DefaultSubscriptionFolder, DefaultLogFile); }
     }
 
     public string DefaultStoreFile

@@ -128,13 +128,25 @@ internal static class Program
         return Task.Run(() => result);
     }
 
+    private static Task<CliActionResult> PausePlayback(List<string> Options) {
+        if (ThePlayer != null)
+        {
+            ThePlayer.Pause();
+        }
+
+        CliActionResult result = new(CliActionResult.Result.Success, []);
+        return Task.Run(() => result);
+    }
+
     private static Task<CliActionResult> PlayEpisode(List<string> Options) {
         if (Options.Count > 0)
         {
-            int requestedEpisodeIndex = Convert.ToInt32(Options.First());
-            if (requestedEpisodeIndex > 0 && requestedEpisodeIndex <= episodes.Count)
+            int episodeId = Convert.ToInt32(Options.First());
+            Episode? episode = db.Episodes.GetByID(episodeId);
+
+            if (episode != null)
             {
-                selectedEpisode = episodes[requestedEpisodeIndex - 1];
+                selectedEpisode = episode;
                 _cli.ThePrompt = string.Format("{0} :: {1}", selectedPodcast?.Title, selectedEpisode.Title);
 
                 ThePlayer = new(selectedEpisode.Url);
@@ -164,6 +176,7 @@ internal static class Program
         new CliAction("Episodes", "List episodes", [ "episodes", "e" ], ListEpisodes),
         new CliAction("History", "View listening history", [ "history", "v" ], CliAction.DefaultSuccessFunction),
         new CliAction("Information", "Show podcast/episode information", [ "info", "i" ], CliAction.DefaultSuccessFunction),
+        new CliAction("Pause", "Pause playback", [ "pause", "." ], PausePlayback),
         new CliAction("Podcasts", "List podcasts", [ "list", "l" ], ListPodcasts),
         new CliAction("Play", "Play an episode", [ "play", "p" ], PlayEpisode),
         new CliAction("Search", "Search for a podcast", [ "search", "s", "/" ], CliAction.DefaultSuccessFunction),
