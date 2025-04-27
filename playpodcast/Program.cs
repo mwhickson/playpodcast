@@ -4,6 +4,8 @@ internal static class Program
 {
     private static string ApplicationTitle = "playpodcast v0.01 | Copyright 2025, Matthew Hickson | https://github.com/mwhickson/playpodcast.git";
 
+    private static int MaximumEpisodeCount = 15; // TODO: move to config; disregard if searching is being performed
+
     private static Utility utility = new();
 
     private static Cli _cli = new(new CliTheme(
@@ -99,7 +101,12 @@ internal static class Program
                 Console.WriteLine();
                 Console.WriteLine("{0} | {1} | {2}", "ID".PadRight(10), "PUBLISHED".PadRight(12), "TITLE");
                 Console.WriteLine("{0} | {1} | {2}", new String('-' ,10), new String('-', 12), new String('-', 50));
-                episodes.ForEach((e) => Console.WriteLine("{0} | {1} | {2}", e.Id.ToString().PadRight(10), e.PublishedOn.ToShortDateString().PadRight(12), e.Title));
+
+                for (int i = 0; i < Math.Min(MaximumEpisodeCount, episodes.Count); i++)
+                {
+                    Episode e = episodes[i];
+                    Console.WriteLine("{0} | {1} | {2}", e.Id.ToString().PadRight(10), e.PublishedOn.ToShortDateString().PadRight(12), e.Title);
+                }
             }
             else
             {
