@@ -95,7 +95,7 @@ internal static class Program
                 Console.WriteLine("Episode List [{0}]:", selectedPodcast.Title);
                 Console.WriteLine();
 
-                episodes.ForEach((e) => Console.WriteLine("{0} >>> {1}", e.Id, e.Title));
+                episodes.ForEach((e) => Console.WriteLine("{0} | {1} | {2}", e.Id, e.PublishedOn.ToShortDateString(), e.Title));
             }
             else
             {

@@ -10,7 +10,7 @@ public class EpisodeStore
     private const string SQL_DELETE_BY_URL = "DELETE FROM episode WHERE url = $url";
     private const string SQL_GET_BY_ID = "SELECT TOP 1 * FROM episode WHERE id = $id";
     private const string SQL_GET_BY_URL = "SELECT TOP 1 * FROM episode WHERE url = $url";
-    private const string SQL_GET_LIST_BY_PODCAST_ID = "SELECT * FROM episode WHERE podcast_id = $podcast_id ORDER BY title, id";
+    private const string SQL_GET_LIST_BY_PODCAST_ID = "SELECT * FROM episode WHERE podcast_id = $podcast_id ORDER BY published_on DESC, id DESC, title";
     private const string SQL_UPSERT = @"
         INSERT INTO episode(id, podcast_id, title, url, description, published_on, is_played, position)
         VALUES (null, $podcast_id, $title, $url, $description, $published_on, $is_played, $position)
@@ -126,9 +126,16 @@ public class EpisodeStore
                 if (reader.Read())
                 {
                     episode = new Episode(
+                        reader.GetInt32(reader.GetOrdinal("podcast_id")),
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
                     );
+
+                    episode.Id = reader.GetInt32(reader.GetOrdinal("id"));
+                    episode.Description = reader.GetString(reader.GetOrdinal("description"));
+                    episode.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
+                    episode.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
+                    episode.Position = reader.GetInt32(reader.GetOrdinal("position"));
                 }
             }
 
@@ -154,9 +161,16 @@ public class EpisodeStore
                 if (reader.Read())
                 {
                     episode = new Episode(
+                        reader.GetInt32(reader.GetOrdinal("podcast_id")),
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
                     );
+
+                    episode.Id = reader.GetInt32(reader.GetOrdinal("id"));
+                    episode.Description = reader.GetString(reader.GetOrdinal("description"));
+                    episode.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
+                    episode.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
+                    episode.Position = reader.GetInt32(reader.GetOrdinal("position"));
                 }
             }
 
@@ -182,12 +196,17 @@ public class EpisodeStore
                 while (reader.Read())
                 {
                     Episode e = new(
+                        podcastId,
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
                     );
 
                     e.Id = reader.GetInt32(reader.GetOrdinal("id"));
-                    
+                    e.Description = reader.GetString(reader.GetOrdinal("description"));
+                    e.PublishedOn = reader.GetDateTime(reader.GetOrdinal("published_on"));
+                    e.IsPlayed = reader.GetBoolean(reader.GetOrdinal("is_played"));
+                    e.Position = reader.GetInt32(reader.GetOrdinal("position"));
+
                     episodes.Add(e);
                 }
             }
@@ -209,12 +228,10 @@ public class EpisodeStore
             command.Parameters.AddWithValue("$podcast_id", podcast.Id);
             command.Parameters.AddWithValue("$title", episode.Title);
             command.Parameters.AddWithValue("$url", episode.Url);
-
-            // TODO:
-            command.Parameters.AddWithValue("$description", "");
-            command.Parameters.AddWithValue("$published_on", DateTime.MinValue);
-            command.Parameters.AddWithValue("$is_played", 0);
-            command.Parameters.AddWithValue("$position", 0);
+            command.Parameters.AddWithValue("$description", episode.Description);
+            command.Parameters.AddWithValue("$published_on", episode.PublishedOn);
+            command.Parameters.AddWithValue("$is_played", episode.IsPlayed);
+            command.Parameters.AddWithValue("$position", episode.Position);
 
             int affected = command.ExecuteNonQuery();
 

@@ -109,6 +109,11 @@ public class PodcastStore
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
                     );
+
+                    podcast.Id = reader.GetInt32(reader.GetOrdinal("id"));
+                    podcast.Description = reader.GetString(reader.GetOrdinal("description"));
+                    podcast.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
+                    podcast.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
                 }
             }
 
@@ -137,6 +142,11 @@ public class PodcastStore
                         reader.GetString(reader.GetOrdinal("title")),
                         reader.GetString(reader.GetOrdinal("url"))
                     );
+
+                    podcast.Id = reader.GetInt32(reader.GetOrdinal("id"));
+                    podcast.Description = reader.GetString(reader.GetOrdinal("description"));
+                    podcast.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
+                    podcast.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
                 }
             }
 
@@ -166,6 +176,9 @@ public class PodcastStore
                     );
 
                     p.Id = reader.GetInt32(reader.GetOrdinal("id"));
+                    p.Description = reader.GetString(reader.GetOrdinal("description"));
+                    p.SubscribedOn = reader.GetDateTime(reader.GetOrdinal("subscribed_on"));
+                    p.UpdatedOn = reader.GetDateTime(reader.GetOrdinal("updated_on"));
 
                     podcasts.Add(p);
                 }
@@ -187,9 +200,7 @@ public class PodcastStore
             command.CommandText = SQL_UPSERT;
             command.Parameters.AddWithValue("$title", podcast.Title);
             command.Parameters.AddWithValue("$url", podcast.Url);
-
-            // TODO:
-            command.Parameters.AddWithValue("$description", "");
+            command.Parameters.AddWithValue("$description", podcast.Description);
             command.Parameters.AddWithValue("$subscribed_on", DateTime.Now);
             command.Parameters.AddWithValue("$updated_on", podcast.UpdatedOn);
 

@@ -94,6 +94,8 @@ public class Utility
 
                             string title = "";
                             string episodeUrl = "";
+                            string description = "";
+                            DateTime pubDate = DateTime.MinValue;
                             string sortKey = episodeOrder.ToString(); // NOTE: date would be better here, but the order in the feed is probably safe... (maybe even more reliable)
 
                             using (var itemReader = reader.ReadSubtree())
@@ -101,6 +103,7 @@ public class Utility
                                 while (itemReader.Read())
                                 {
                                     if (itemReader.NodeType != XmlNodeType.Element) continue;
+
                                     if (itemReader.Name == "title")
                                     {
                                         title = itemReader.ReadInnerXml();
@@ -113,6 +116,16 @@ public class Utility
                                         }
                                     }
 
+                                    if (itemReader.Name == "description")
+                                    {
+                                        description = itemReader.ReadInnerXml(); // TOOD: fix any CDATA/HTML stuff...
+                                    }
+
+                                    if (itemReader.Name == "pubDate")
+                                    {
+                                        pubDate = DateTime.Parse(itemReader.ReadInnerXml());
+                                    }
+
                                     if (itemReader.Name == "enclosure" && itemReader.GetAttribute("url") != null)
                                     {
                                         episodeUrl = itemReader.GetAttribute("url") ?? "";
@@ -122,7 +135,11 @@ public class Utility
 
                             if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(episodeUrl)) continue;
 
-                            Episode e = new Episode(title.Trim(), episodeUrl.Trim());
+                            Episode e = new(p.Id, title.Trim(), episodeUrl.Trim());
+
+                            e.Description = description;
+                            e.PublishedOn = pubDate;
+
                             episodes.Add(e);
                         }
                     }

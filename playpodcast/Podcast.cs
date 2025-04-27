@@ -2,10 +2,12 @@ namespace playpodcast;
 
 public class Podcast
 {
-    public int Id { get; set; } = 0;
+    public int Id { get; set; }
     public string Title { get; set; }
     public string Url { get; }
+    public string Description { get; set; }
     public List<Episode> Episodes { get; }
+    public DateTime SubscribedOn { get; set; }
     public DateTime UpdatedOn { get; set; }
     public int EpisodeCount
     {
@@ -14,9 +16,12 @@ public class Podcast
 
     public Podcast(string title, string url)
     {
+        Id = 0;
         Title = title;
         Url = url;
+        Description = "";
         Episodes = new();
+        SubscribedOn = DateTime.MinValue;
         UpdatedOn = DateTime.MinValue;
     }
 
