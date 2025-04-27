@@ -33,6 +33,8 @@ Welcome to `playpodcast`!
 ## Tools
 
 - LibVLCSharp : https://github.com/videolan/libvlcsharp
+- Microsoft.Data.Sqlite: https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/?tabs=net-cli
+- sqlite: https://www.sqlite.org/
 - iTunes Search API : https://performance-partners.apple.com/search-api
 - XML, RSS, OPML
 
