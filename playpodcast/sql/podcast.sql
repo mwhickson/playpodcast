@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS podcast (
     description NVARCHAR(4000) NULL,
     subscribed_on DATETIME NOT NULL,
     updated_on DATETIME NULL,
-    PRIMARY KEY (id AUTOINCREMENT)
+    PRIMARY KEY (id AUTOINCREMENT),
+    UNIQUE(url)
 )

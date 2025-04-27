@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS episode (
 	is_played BIT NOT NULL DEFAULT 0,
 	position INTEGER NULL,
     PRIMARY KEY (id AUTOINCREMENT),
-	FOREIGN KEY (podcast_id) REFERENCES podcast(id)
+	FOREIGN KEY (podcast_id) REFERENCES podcast(id),
+    UNIQUE(url)
 )

@@ -98,25 +98,26 @@ internal static class Program
     }
 
     private static Task<CliActionResult> ListPodcasts(List<string> Options) {
-        if (Options.Count > 0)
-        {
-            string listOptions = Options.First().ToString();
+        // TODO: what options do we want?
+        // if (Options.Count > 0)
+        // {
+        //     string listOptions = Options.First().ToString();
 
-            switch (listOptions.ToLower())
-            {
-                case "refresh":
-                case "r":
-                    GetPodcasts(SubscriptionFile);
-                    Console.WriteLine("Subscriptions reloaded.");
-                    break;
-                default:
-                    // PASS:
-                    break;
-            }
-        }
+        //     switch (listOptions.ToLower())
+        //     {
+        //         case "refresh":
+        //         case "r":
+        //             GetPodcasts(SubscriptionFile);
+        //             Console.WriteLine("Subscriptions reloaded.");
+        //             break;
+        //         default:
+        //             // PASS:
+        //             break;
+        //     }
+        // }
 
         Console.WriteLine();
-        Console.WriteLine("Subscription List [{0}]:", SubscriptionFile);
+        Console.WriteLine("Subscription List:");
         Console.WriteLine();
 
         int podcastIndex = 0;
@@ -176,7 +177,9 @@ internal static class Program
 
     private static void GetPodcasts(string subscriptionFile)
     {
-        podcasts = Utility.LoadPodcastsFromFile(subscriptionFile);
+        List<Podcast> podcastsFromFile = Utility.LoadPodcastsFromFile(subscriptionFile);
+        Utility.StorePodcasts(db, podcastsFromFile);
+        podcasts = db.Podcasts.GetList();
     }
 
     private static void DisplayProgramTitle()

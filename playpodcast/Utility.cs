@@ -54,6 +54,13 @@ public class Utility
         return podcasts;
     }
 
+    public static bool StorePodcasts(DataStore store, List<Podcast> podcasts)
+    {
+        bool success = true;
+        podcasts.ForEach((p) => success = success && store.Podcasts.InsertOrUpdate(p));
+        return success;
+    }
+
     public static List<Episode> GetEpisodesFromFeed(Podcast p)
     {
         List<Episode> episodes = new();
