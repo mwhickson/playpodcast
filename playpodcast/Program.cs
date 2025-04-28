@@ -185,15 +185,15 @@ internal static class Program
         new CliAction("Choose", "Choose a podcast", [ "choose", "c", "*" ], ChoosePodcast),
         new CliAction("Clear", "Clear the screen", [ "clear", "z" ], ClearScreen),
         new CliAction("Episodes", "List episodes", [ "episodes", "e" ], ListEpisodes),
-        new CliAction("History", "View listening history", [ "history", "v" ], CliAction.DefaultSuccessFunction),
-        new CliAction("Information", "Show podcast/episode information", [ "info", "i" ], CliAction.DefaultSuccessFunction),
+        // new CliAction("History", "View listening history", [ "history", "v" ], CliAction.DefaultSuccessFunction),
+        // new CliAction("Information", "Show podcast/episode information", [ "info", "i" ], CliAction.DefaultSuccessFunction),
         new CliAction("Pause", "Pause playback", [ "pause", "." ], PausePlayback),
         new CliAction("Podcasts", "List podcasts", [ "list", "l" ], ListPodcasts),
         new CliAction("Play", "Play an episode", [ "play", "p" ], PlayEpisode),
-        new CliAction("Search", "Search for a podcast", [ "search", "s", "/" ], CliAction.DefaultSuccessFunction),
+        // new CliAction("Search", "Search for a podcast", [ "search", "s", "/" ], CliAction.DefaultSuccessFunction),
         new CliAction("Stop", "Stop playback", [ "stop", "x" ], StopPlayback),
-        new CliAction("Subscribe", "Subscribe to podcast", [ "subscribe", "+" ], CliAction.DefaultSuccessFunction),
-        new CliAction("Unsubscribe", "Unsubscribe from podcast", [ "unsubscribe", "-" ], CliAction.DefaultSuccessFunction),
+        // new CliAction("Subscribe", "Subscribe to podcast", [ "subscribe", "+" ], CliAction.DefaultSuccessFunction),
+        // new CliAction("Unsubscribe", "Unsubscribe from podcast", [ "unsubscribe", "-" ], CliAction.DefaultSuccessFunction),
     ];
 
     private static void GetPodcasts(string subscriptionFile)
